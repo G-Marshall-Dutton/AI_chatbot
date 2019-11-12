@@ -19,8 +19,16 @@ posts = [
 
 @app.route("/")
 @app.route("/home")
+def index():
+    return render_template('index.html')
+
+
+# Wont use this template, but can refference for flask loops
+@app.route("/home-old")
 def home():
     return render_template('home.html', posts=posts)
+
+
 
 @app.route("/chatbot")
 def chatbot():
