@@ -1,6 +1,5 @@
-
 *.pyc
-*.pyc
+__pycache__/
+vscode/
 app/__pycache__/__init__.cpython-36.pyc
-
 .vscode/

@@ -21,38 +21,44 @@ doc = nlp("Apple is looking at buying U.K. startup for $1 billion")
     # is alpha: Is the token an alpha character?
     # is stop: Is the token part of a stop list, i.e. the most common words of the language?
 
-
 #sentence with type
 class Query:
-    def __init__(self):
-        self.sentence = None
-        self.type = None
     def __init__(self,sentence,type):
         self.sentence = sentence
         self.type = type
 
 
 
-# Sentences we'll respond with if the user greeted us
-GREETING_KEYWORDS = ("hello", "hi", "greetings", "sup", "what's up","sup bro", "hey")
+class ReasoningEngine:
 
-#respond to sentence based on type
-def respond(query):
-    if(query.type == "greeting"):
-        print(random.choice(GREETING_KEYWORDS))
-    else:
-        print("wat...")
+    def __init__(self):
+        # Sentences we'll respond with if the user greeted us
+        self.GREETINGS = ("hello", "hi", "greetings", "sup", "what's up","It's so nice to see not everyone is obsessed with appearances", "hey")
+        self.RESPONSES = ("... my day was fine thank for asking... *rolls eyes*", "WHY DO YOU ALWAYS JUST TALK AT ME", "It would be nice if you just listened to me for once...",
+         "Well, that's awesome for someone like you", "I don't have the time nor the crayons to explain this to you.")
 
-#assign sentence a type (greeting or not)
-def classify_user_sentence(sentence):
-    for word in sentence.split():
-        if word.lower() in GREETING_KEYWORDS:
-            return Query(sentence,"greeting")
-    return Query(sentence,None)
+    def getRandomGreeting(self):
+        return random.choice(self.GREETINGS)
 
-userInput = input("INTRODUCE YOURSELF: ")
-respond(classify_user_sentence(userInput))
+    def getRandomPassAggResponse(self):
+        return random.choice(self.RESPONSES)
 
+    #respond to sentence based on type
+    def respond(self,query):
+        if(query.type == "greeting"):
+            print(random.choice(self.GREETINGS))
+        else:
+            print("wat...")
+
+    #assign sentence a type (greeting or not)
+    def classify_user_sentence(self,sentence):
+        for word in sentence.split():
+            if word.lower() in self.GREETINGS:
+                return Query(sentence,"greeting")
+        return Query(sentence,None)
+
+    #userInput = input("INTRODUCE YOURSELF: ")
+    #respond(classify_user_sentence(userInput))
 
 # creating Dialogue
 # from spacy.tokens import Doc

@@ -2,17 +2,19 @@
 <!-- <body class"container"> -->
 {% block content %}
 
+
+
     <div class="row h-100 justify-content-center align-content-center ">
 
         <div class="chatbot-modal"> 
             <div id="textfield" class="textfield">
                 <div class="response message-left">
-                    <p class="bg-primary">How can I help?</p>
+                    <p class="bg-primary">{{greeting}}</p>
                 </div>
 
             </div>
             <div class="row">
-                <input class="messageInput" type="text" placeholder="Type your question here...">
+                <input id="userInput" class="messageInput" type="text" placeholder="Type your question here...">
                 <a class="send-btn btn">Send</a>
             </div>
 
@@ -20,6 +22,12 @@
         
 
     </div>  
+
+    <script>
+           
+
+            
+    </script>
 
 {% endblock content %}
 <!-- </body>    -->
