@@ -1,9 +1,6 @@
 from flask import Flask, render_template,request,make_response,jsonify
 import json
-import sys
-sys.path.append('/Users/georgemarshall-dutton/AI_chat_bot/nlp')
-import spacy_test
-
+from nlp import spacy_test
 
 app = Flask(__name__)
 
@@ -40,8 +37,4 @@ def chatbot():
     greet = re.getRandomGreeting()
     return render_template('chatbot.html', greeting = greet)
 
-
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+app.run(debug=True)
