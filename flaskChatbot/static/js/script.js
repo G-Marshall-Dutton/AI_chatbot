@@ -1,5 +1,9 @@
 
 
+function testFunction(){
+
+}
+
 function updateScroll(){
 
     var objDiv = document.getElementById("textfield");
@@ -9,32 +13,54 @@ function updateScroll(){
 // JQUERY --------------------------------------------------
 
 $(document).ready(function(){
-
     
 
     // Sends alternating messages on clicking 'send' /chatbot.html
     $(".send-btn").click(function(){
 
+
         // Get last message sent
         var lastMessage = $(".response:last-of-type")
 
+        // Get users question and clear input
+        var input = $(".messageInput")
+        var userQuery = input.val() 
+        input.val('') 
+
+        if(userQuery != ""){
+
+            lastMessage.after(
+                "<div class='response message-right '>  <p class='bg-success'> "+ userQuery +"</p>  </div>"
+            )
+        
+            
+
+            // Call python function
+            jQuery.get(
+                '/send_request_to_AI', 
+                {text: userQuery},
+                function(data) {
+                    lastMessage.after(
+                        "<div class='response message-left '>  <p class='bg-primary'>" + data + "</p>  </div>"
+                    );
+                }
+            )
+        }
+
         // Check if it was right or left side and respond
-        if(lastMessage.hasClass("message-right")){
-            lastMessage.after(
-                "<div class='response message-left '>  <p class='bg-primary'> Helping... </p>  </div>"
-            );
-        }
-        else {
-            lastMessage.after(
-                "<div class='response message-right '>  <p class='bg-success'> Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip... </p>  </div>"
-            );
-        }
+        // If message came form AI
+
+        // if(lastMessage.hasClass("message-right")){
+        //     lastMessage.after(
+        //         "<div class='response message-left '>  <p class='bg-primary'> Helping... </p>  </div>"
+        //     );
+        // }
+        // If message came from user
+
 
         updateScroll();
     });
   
   });
-
-
 
 // JQUERY END --------------------------------------------------

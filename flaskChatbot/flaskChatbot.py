@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 app = Flask(__name__)
 
 posts = [
@@ -32,6 +32,22 @@ def home():
 
 @app.route("/chatbot")
 def chatbot():
-    return render_template('chatbot.html')
+
+    AI_response = "JEZ"
+
+    return render_template('chatbot.html', response=AI_response)
+
+
+# Runs after text is sent on GUI
+@app.route('/send_request_to_AI', methods=["GET"])
+def background_process_test():
+    userQuery = request.args.get('text')
+
+    
+    return userQuery
+
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
