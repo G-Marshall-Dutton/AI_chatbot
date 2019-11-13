@@ -33,7 +33,8 @@ $(document).ready(function(){
                 "<div class='response message-right '>  <p class='bg-success'> "+ userQuery +"</p>  </div>"
             )
         
-            
+            // Get last message sent again
+            lastMessage = $(".response:last-of-type")
 
             // Call python function
             jQuery.get(

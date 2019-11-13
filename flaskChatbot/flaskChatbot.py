@@ -43,7 +43,6 @@ def chatbot():
 def background_process_test():
     userQuery = request.args.get('text')
 
-    
     return userQuery
 
 
