@@ -17,12 +17,12 @@ sendMessage = () => {
     console.log("PaPa's new friend: "+userMessage)
     document.getElementById('userInput').value = "" //Empy input
 
-    // Write user message bubble
-    lastMessage.after(
-        "<div class='response message-right '>  <p class='bg-success'> "+userMessage+" </p>  </div>"
-    );
 
-    setTimeout(()=>{  //REMOVE TIMEOUT WHEN WE HAVE ACTUAL PROCESSING xD
+    if(userMessage != ""){
+           // Write user message bubble
+        lastMessage.after(
+            "<div class='response message-right '>  <p class='bg-success'> "+userMessage+" </p>  </div>"
+        );
 
         //Fetch request
         fetch('/chat',{
@@ -42,13 +42,17 @@ sendMessage = () => {
             lastMessage.after(
                 "<div class='response message-left '>  <p class='bg-primary'> "+data.answer+" </p>  </div>"
             );
+            updateScroll();
         }).catch(() => {
             console.log("Could not recieve response from PaPa :(");
         });
 
-    }, 1000);
+    }
 
-    updateScroll();
+ 
+
+
+    
     
 }
 
