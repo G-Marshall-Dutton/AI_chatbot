@@ -1,5 +1,7 @@
 from durable.lang import *
 
+
+
 with ruleset('have_all_train_info'):
     @when_all(c.to << m.to != '',
               c.frm << m.frm != '')
@@ -13,16 +15,18 @@ class ConversationController():
     def __init__(self):
         self.knowledge = {}
     
-    def updateKnowldge(self,newKnowledge):
+    # Takes in a dictionary where keys are fields we can use to specify train ticket details ie( 'to' , 'frm' , 'time' ....)
+    def updateKnowledge(self,newKnowledge): 
         for field in newKnowledge:
             self.knowledge.update(newKnowledge)
             print("ADDED -> ",newKnowledge)
-
             #Update ruleset with new data
             post('have_all_train_info', {field:newKnowledge.get(field)})
 
+            
 
 
-controller = ConversationController()
-controller.updateKnowldge({'to':"norwich"})
-controller.updateKnowldge({'frm':"bristol"})
+
+# controller = ConversationController()
+# controller.updateKnowldge({'to':"norwich"})
+# controller.updateKnowldge({'frm':"bristol"})
