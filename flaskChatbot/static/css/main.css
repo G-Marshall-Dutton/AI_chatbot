@@ -119,6 +119,7 @@ body::before {
     margin: 5px;
     margin-bottom: 20px;
     max-width: 55%;
+    min-width: 15%;
 
     border-radius: 8px;
 

@@ -26,7 +26,11 @@ def home():
 @app.route("/chat", methods=['POST'])
 def chat():
     data = request.get_json()['userMessage']
-    
+
+    # Work out what the user has asked 
+    # work_out_question();
+
+
     # DO SOMETHING WITH USER MESSAGE
     response = re.getRandomPassAggResponse()
     res = make_response(jsonify({"answer": response}), 200)
