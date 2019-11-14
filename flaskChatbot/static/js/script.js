@@ -23,7 +23,7 @@ sendMessage = () => {
         lastMessage.after(
             "<div class='response message-right '>  <p class='bg-success'> "+userMessage+" </p>  </div>"
         );
-
+        updateScroll();
         //Fetch request
         fetch('/chat',{
             method: 'POST',
