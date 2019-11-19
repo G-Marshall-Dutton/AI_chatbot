@@ -1,10 +1,9 @@
 import spacy
 import random
-from controller import controller
+#from controller import controller
 
 nlp = spacy.load("en_core_web_sm") #Load language model object (sm is small version)
-controller = controller.ConversationController()
-
+#controller = controller.ConversationController()
 
 #sentence with type
 class ClassifiedSentence:
@@ -16,17 +15,11 @@ class ClassifiedSentence:
         return self.sentence + " -> " + self.type
 
 
-
 class ReasoningEngine:
 
     def __init__(self):
         # Sentences we'll respond with if the user greeted us
-        self.GREETINGS = ("hello", "hi", "greetings", "sup", "what's up","It's so nice to see not everyone is obsessed with appearances", "hey","how are you?",
-        "who made this",
-        "what do you do?",
-        "hello",
-        "hi",
-        "do you know anything not about trains?")
+        self.GREETINGS = ("Hello", "Hi", "Greetings")
         self.RESPONSES = ("... my day was fine thank for asking... *rolls eyes*", "WHY DO YOU ALWAYS JUST TALK AT ME", "It would be nice if you just listened to me for once...",
          "Well, that's awesome for someone like you", "I don't have the time nor the crayons to explain this to you.")
 
@@ -81,18 +74,33 @@ class ReasoningEngine:
         print(typ)
         return ClassifiedSentence(sentence,typ)
 
-    def extract_information_from_classified_sentence(self, classifiedSentence):
-        query = classifiedSentence
-        knowledge = {}
+    # attempts to return journey info
+    # FROM / TO / DATE-OUT / TIME-OUT
+    def get_journey_info(self, text):
+        doc = nlp(text)
+        for token in doc:
+            print("Token is:" + str(token.pos_))
+            #if token.pos_ is 'PROPN':
+            #    print("PNOUN is: " + str(token.text))
+              
 
-        #MANUALLY CHECK FOR DESTINATION AND DEPARTURE THROUGH PARSE 
-        if query.sentence.find("to")!=-1:
-            print(query.sentence.find("to"))
-            to = query.sentence.split("to")[1].split(" ")[1] # please ignore how bad this is.... please
-            knowledge.update({"to":to})
-        if query.sentence.find("from")!=-1:
-            frm = query.sentence.split("from")[1].split(" ")[1] # please ignore how bad this is.... please
-            knowledge.update({"frm":frm})
+        
 
-        controller.updateKnowledge(knowledge)
+
+
+    # OLD CODE
+    # def extract_information_from_classified_sentence(self, classifiedSentence):
+    #     query = classifiedSentence
+    #     knowledge = {}
+
+    #     #MANUALLY CHECK FOR DESTINATION AND DEPARTURE THROUGH PARSE 
+    #     if query.sentence.find("to")!=-1:
+    #         print(query.sentence.find("to"))
+    #         to = query.sentence.split("to")[1].split(" ")[1] # please ignore how bad this is.... please
+    #         knowledge.update({"to":to})
+    #     if query.sentence.find("from")!=-1:
+    #         frm = query.sentence.split("from")[1].split(" ")[1] # please ignore how bad this is.... please
+    #         knowledge.update({"frm":frm})
+
+    #     #controller.updateKnowledge(knowledge)
 
