@@ -55,21 +55,46 @@ def createNearestNeighbours():
     import numpy as np
     import matplotlib.pyplot as plt
     import pandas.io.sql as sqlio
+    import pandas
 
     day = datetime.datetime.today().weekday()
     time = datetime.datetime.now().time().strftime("%H:%M:%S")
 
     dataframe = DatabaseQuerier().testReturnDataframe('NRCH','LIVST')
 
+    reduced_df = pandas.DataFrame(columns = ["day","delay_s"])
+    print(reduced_df)
+
+    count = 0
     for row in dataframe.iterrows():
+
+        # Get data in correct formats
+        dep_date = row[1]['rid'][0:8]
+        dep_date = datetime.datetime.strptime(dep_date,"%Y%m%d")
+        dep_date_f = datetime.datetime.strftime(dep_date,"%Y%m%d")
+
+
+        # Get day of week as index
+        day = dep_date.weekday()
+
+        # Calculate journey delay
         a = datetime.datetime.strptime(row[1]['dep_at'],"%H:%M")
         b = datetime.datetime.strptime(row[1]['arr_at'],"%H:%M")
         delay = b - a
         if delay.total_seconds() < 0:
             delay = delay + datetime.timedelta(days=1)
-        delay = datetime.datetime.fromtimestamp(delay.seconds)
-        print(a.time(),b.time(),delay.time()) 
+        
+        reduced_df.loc[count] = [day,delay.total_seconds()]
+        count = count + 1
 
+    #reduced_df['day'] = pandas.to_numeric(reduced_df['day'])
+    #reduced_df['delay_s'] = pandas.to_numeric(reduced_df['delay_s'])
+    print(reduced_df)
+    awd = reduced_df.groupby('day')['delay_s'].mean()
+    print(awd)
+    awd.plot(kind="bar")
+    plt.tight_layout()
+    plt.show()
 
 ####################################################
 #
