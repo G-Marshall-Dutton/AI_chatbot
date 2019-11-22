@@ -88,12 +88,14 @@ class ReasoningEngine:
         # convert to tokens
         doc = nlp(text)
 
+        # keeps track of position through doc
         position = 0
 
         # iterate through tokens (for TO/FROM finding)
         for token in doc:
-
-            print("Token type is:" + str(token.pos_))
+            
+            # debug to display detected tokens
+            #print("Token type is:" + str(token.pos_))
             
             # if proper noun is detected
             if token.pos_ is 'PROPN':
@@ -128,7 +130,14 @@ class ReasoningEngine:
         # iterate through entities (looking for DATE/TIME)
         for ent in doc.ents: 
 
-            
+            # date entity found, add to dictionary
+            if(ent.label_ is "DATE"):
+                dict.update({"date": ent.text}) 
+
+            # date entity found, add to dictionary
+            if(ent.label_ is "TIME"):
+                dict.update({"time": ent.text}) 
+
 
 
     # OLD CODE

@@ -8,7 +8,7 @@ re = nlp.ReasoningEngine()
 # get user input, classify
 while(True):
     # get user input
-    userInput = input("> ")
+    userInput = input("Input for NLP > ")
 
     #{from: to: date: time:}
     dict = {
@@ -22,7 +22,6 @@ while(True):
     nlp_response = re.get_journey_info(userInput, dict)
 
     # print results of classifying
-    print(nlp_response)
-    print('Dict is now:')
+    print('get_journey_info returns:')
     print(dict)
 
