@@ -57,7 +57,7 @@ class ReasoningEngine:
         sent = nlp(sentence)
         cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
         best_score = 0
-        typ = "query"
+        typ = "booking"
         for previous in ReasoningEngine.trainInformation:
             example = nlp(previous)
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
@@ -70,22 +70,24 @@ class ReasoningEngine:
             if cleaned_sentence.similarity(cleaned_previous) > best_score:
                 typ = "chat"
 
+        # TODO: add delay
+        # TODO: better way of classifying intent?
+
         # 'chat' or 'query' for now
         print(typ)
         return ClassifiedSentence(sentence,typ)
 
     # attempts to return journey info
     # FROM / TO / DATE-OUT / TIME-OUT
-    def get_journey_info(self, text):
+    # {frm: to: date: time:}
+    # TODO: controller will pass in a dict of what it knows, it is this functions job to try and identify information from the text, update the dictionary and return it
+    def get_journey_info(self, text, dict):
         doc = nlp(text)
         for token in doc:
             print("Token is:" + str(token.pos_))
             #if token.pos_ is 'PROPN':
             #    print("PNOUN is: " + str(token.text))
               
-
-        
-
 
 
     # OLD CODE
