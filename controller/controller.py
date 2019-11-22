@@ -13,7 +13,14 @@ from durable.lang import *
 
 class ConversationController():
     def __init__(self):
-        self.state = {}
+        # Chat : Booking : Delay 
+        self.context = "Chat"
+        self.state = {
+            frm: None,
+            to: None,
+            date: None,
+            time: None,
+        }
         self.response_needed = 4
         self.state_confirmed = False
 
@@ -24,6 +31,7 @@ class ConversationController():
 
     # Dertermnine what kind of question was asked. i.e. was it train related?
     def determine_topic(self, user_query):
+        
         return "train"
 
     # Extracts state relevant info and updates state
