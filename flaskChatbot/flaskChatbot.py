@@ -27,16 +27,10 @@ def chat():
     #Read in userInput as string
     userInput = request.get_json()['userMessage']
 
-    # Trun message into '' (object with sentence and type ie. hello and chat, or i want train and question)
-    query = re.classify_user_sentence(userInput)
-    response=re.make_decision(query)
+    # Pass the user input to the controller : respond deals with connection to NLP
+    response = controller.respond(userInput)
 
-
-    # DO SOMETHING WITH USER MESSAGE
-    #response = re.get_random_response()
-    res = make_response(jsonify({"answer": response}), 200)
-
-    return res
+    return response
     
 
 # Chatbot endpoint
