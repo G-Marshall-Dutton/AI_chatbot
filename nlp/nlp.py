@@ -70,7 +70,7 @@ class ReasoningEngine:
             if cleaned_sentence.similarity(cleaned_previous) > best_score:
                 typ = "chat"
 
-        # TODO: add delay
+        # TODO: add "delay"
         # TODO: better way of classifying intent?
 
         # 'chat' or 'query' for now
@@ -79,15 +79,56 @@ class ReasoningEngine:
 
     # attempts to return journey info
     # FROM / TO / DATE-OUT / TIME-OUT
-    # {frm: to: date: time:}
+    # {from: to: date: time:}
     # TODO: controller will pass in a dict of what it knows, it is this functions job to try and identify information from the text, update the dictionary and return it
     def get_journey_info(self, text, dict):
+        
+        pnouns = [] # stores the proper nouns detected in the text, used to count and see if it's to/from or both
+        
+        # convert to tokens
         doc = nlp(text)
+
+        position = 0
+
+        # iterate through tokens (for TO/FROM finding)
         for token in doc:
-            print("Token is:" + str(token.pos_))
-            #if token.pos_ is 'PROPN':
-            #    print("PNOUN is: " + str(token.text))
-              
+
+            print("Token type is:" + str(token.pos_))
+            
+            # if proper noun is detected
+            if token.pos_ is 'PROPN':
+
+                # store all found pronouns
+                pnouns.append(token.text)
+
+                # check not in first position, because can't look at backward neighbour
+                if(position > 0):
+
+                    # if previous word is "from", then must be source 
+                    if(token.nbor(-1).text == "from"):
+                        dict.update({"from": token.text})   # add to dict         
+
+                    # if previous word is "to", then must be destination
+                    if(token.nbor(-1).text == "to"):
+                        dict.update({"to": token.text}) 
+
+            # check if one source/destination is missing, if so and only one pronoun found, must be it
+            if(len(pnouns) == 1):
+                # if only FROM is missing
+                if(dict.get("from") is None and dict.get("to") is not None):
+                    dict.update({"from": pnouns[0]})
+
+                # if only TO is missing
+                if(dict.get("from") is not None and dict.get("to") is None):
+                    dict.update({"to": pnouns[0]})
+
+            # update position through token iteration
+            position = position + 1
+
+        # iterate through entities (looking for DATE/TIME)
+        for ent in doc.ents: 
+
+            
 
 
     # OLD CODE
