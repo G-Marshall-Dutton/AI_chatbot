@@ -26,10 +26,12 @@ class ConversationController():
         return False
 
     
-    # Dertermnine what kind of question was asked. i.e. was it train related?
-    def determine_topic(self, user_query):
-        return "booking"
-
+    # Dertermnine context of user query : will return 'chat' , 'booking' , 'delay'
+    def determine_context(self, user_query):
+        # Pass to NLP 
+        context = "booking"
+        return context
+        
     # Extracts state relevant info and updates state
     def extract_info(self, user_query):
         # Get info
@@ -65,14 +67,14 @@ class ConversationController():
 
         # If we have all the needed info, confirm its correct
         elif not self.state_confirmed:
-            return "So you want to travel from %s to %s on the %s at %s" % (self.state['to'], self.state['from'], self.state['date'], self.state['time'])
+            return "So you want to travel from %s to %s on the %s at %s?" % (self.state['to'], self.state['from'], self.state['date'], self.state['time'])
 
     
     def respond(self, user_query):
         print('In controller.respond()')
 
         # Recieve context from NLP : 'chat' , 'booking' , 'delay'
-        context = self.determine_topic(user_query)
+        context = self.determine_context(user_query)
         print('context is:', context)
 
         if context is "booking":

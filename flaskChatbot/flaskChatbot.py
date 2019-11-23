@@ -29,7 +29,7 @@ def chat():
 
     # Pass the user input to the controller : respond deals with connection to NLP
     response = controller.respond(userInput)
-
+    response = make_response(jsonify({"answer": response}), 200)
     return response
     
 
