@@ -75,7 +75,9 @@ class ReasoningEngine:
 
         # 'chat' or 'query' for now
         print(typ)
-        return ClassifiedSentence(sentence,typ)
+        #return ClassifiedSentence(sentence,typ)
+        return typ
+        
 
     # attempts to return journey info
     # FROM / TO / DATE-OUT / TIME-OUT
