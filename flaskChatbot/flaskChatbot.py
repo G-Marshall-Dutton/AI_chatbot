@@ -7,8 +7,9 @@ from controller import controller
 app = Flask(__name__)
 
 # Initialize components (Controller, Reasoning Engine, Language Processing)
-controller = controller.ConversationController()
-re = nlp.ReasoningEngine()
+nlp = nlp.ReasoningEngine()
+controller = controller.ConversationController(nlp)
+
 
 
 ########################################################################
@@ -36,7 +37,7 @@ def chat():
 # Chatbot endpoint
 @app.route("/chatbot")
 def chatbot():
-    greet = re.get_random_greeting()
+    greet = nlp.get_random_greeting()
     return render_template('chatbot.html', greeting = greet)
 
 #

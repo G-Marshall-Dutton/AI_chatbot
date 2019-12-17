@@ -75,7 +75,9 @@ class ReasoningEngine:
 
         # 'chat' or 'query' for now
         print(typ)
-        return ClassifiedSentence(sentence,typ)
+        #return ClassifiedSentence(sentence,typ)
+        return typ
+        
 
     # attempts to return journey info
     # FROM / TO / DATE-OUT / TIME-OUT
@@ -84,6 +86,7 @@ class ReasoningEngine:
     def get_journey_info(self, text, dict):
         
         pnouns = [] # stores the proper nouns detected in the text, used to count and see if it's to/from or both
+        pnouns_pos = []
         
         # convert to tokens
         doc = nlp(text)
@@ -91,11 +94,11 @@ class ReasoningEngine:
         # keeps track of position through doc
         position = 0
 
-        # iterate through tokens (for TO/FROM finding)
+        # iterate through tokens, store pronouns and positions
         for token in doc:
             
             # debug to display detected tokens
-            #print("Token type is:" + str(token.pos_))
+            #print("Token type is " + str(token.pos_) + " @ position " + str(position)) 
             
             # if proper noun is detected
             if token.pos_ is 'PROPN':
@@ -103,29 +106,59 @@ class ReasoningEngine:
                 # store all found pronouns
                 pnouns.append(token.text)
 
+                # store position of pnoun
+                pnouns_pos.append(position)
+                
+            # update position through token iteration
+            position = position + 1
+
+        # check if one source/destination is missing, if so and only one pronoun found, must be it
+        if(len(pnouns) == 1):
+
+            #print("Only 1 pnoun detected")
+
+            # if only FROM is missing
+            if(dict.get("from") is None and dict.get("to") is not None):
+                print("Adding a from ONLY")
+                dict.update({"from": pnouns[0]})
+
+            # if only TO is missing
+            if(dict.get("from") is not None and dict.get("to") is None):
+                print("Adding a to ONLY")
+                dict.update({"to": pnouns[0]}) 
+
+            # if only one value is found, check not in first position, because can't look at backward neighbour
+            if(pnouns_pos[0] > 0):
+
+                # if previous word is "from", then must be source 
+                if(token.nbor(-1).text == "from"):
+                    dict.update({"from": pnouns[0]})   # add to dict         
+
+                # if previous word is "to", then must be destination
+                if(token.nbor(-1).text == "to"):
+                    dict.update({"to": pnouns[0]}) 
+
+
+        # otherwise if 2 pnouns found then determine to/from 
+        elif(len(pnouns) < 3):
+
+            # loop through pnouns
+            for i in range(len(pnouns)):
+
                 # check not in first position, because can't look at backward neighbour
-                if(position > 0):
+                if(pnouns_pos[i] > 0):
 
                     # if previous word is "from", then must be source 
                     if(token.nbor(-1).text == "from"):
-                        dict.update({"from": token.text})   # add to dict         
+                        dict.update({"from": pnouns[i]})   # add to dict         
 
                     # if previous word is "to", then must be destination
                     if(token.nbor(-1).text == "to"):
-                        dict.update({"to": token.text}) 
+                        dict.update({"to": pnouns[i]}) 
+        # otherwise more than 2 pnouns found, so do nothing
+        #else:
+            #print("No proper nouns found")
 
-            # check if one source/destination is missing, if so and only one pronoun found, must be it
-            if(len(pnouns) == 1):
-                # if only FROM is missing
-                if(dict.get("from") is None and dict.get("to") is not None):
-                    dict.update({"from": pnouns[0]})
-
-                # if only TO is missing
-                if(dict.get("from") is not None and dict.get("to") is None):
-                    dict.update({"to": pnouns[0]})
-
-            # update position through token iteration
-            position = position + 1
 
         # iterate through entities (looking for DATE/TIME)
         for ent in doc.ents: 
@@ -137,22 +170,3 @@ class ReasoningEngine:
             # date entity found, add to dictionary
             if(ent.label_ is "TIME"):
                 dict.update({"time": ent.text}) 
-
-
-
-    # OLD CODE
-    # def extract_information_from_classified_sentence(self, classifiedSentence):
-    #     query = classifiedSentence
-    #     knowledge = {}
-
-    #     #MANUALLY CHECK FOR DESTINATION AND DEPARTURE THROUGH PARSE 
-    #     if query.sentence.find("to")!=-1:
-    #         print(query.sentence.find("to"))
-    #         to = query.sentence.split("to")[1].split(" ")[1] # please ignore how bad this is.... please
-    #         knowledge.update({"to":to})
-    #     if query.sentence.find("from")!=-1:
-    #         frm = query.sentence.split("from")[1].split(" ")[1] # please ignore how bad this is.... please
-    #         knowledge.update({"frm":frm})
-
-    #     #controller.updateKnowledge(knowledge)
-

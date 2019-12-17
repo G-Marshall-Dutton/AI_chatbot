@@ -1,15 +1,20 @@
         
 
 class ConversationController():
-    def __init__(self):
+    def __init__(self, nlp):
         # Chat : Booking : Delay 
+        self.nlp = nlp
         self.context = "Chat"
         self.state = {
-            'from': 'Ipswich',
-            'to': 'Norwich',
-            'date': '31/07/2020',
-            'time': '3:00pm',
+            'from': None,
+            'to': None,
+            'date': None,
+            'time': None,
         }
+        print("!!%s", self.state.keys())
+        for k, v in self.state.items():
+            print(k, v)
+
         self.response_needed = 4
         self.state_confirmed = False
 
@@ -19,18 +24,19 @@ class ConversationController():
         self.state.update(newInfo)
 
     def state_not_full(self):
-        for key in self.state.keys():
-            if self.state[key] is None:
+        for k, v in self.state.items():
+            print(k, v)
+            if v is None:
                 return True
 
         return False
 
     
-    # Dertermnine context of user query : will return 'chat' , 'booking' , 'delay'
-    def determine_context(self, user_query):
-        # Pass to NLP 
-        context = "booking"
-        return context
+    # # Dertermnine context of user query : will return 'chat' , 'booking' , 'delay'
+    # def determine_context(self, user_query):
+    #     # Pass to NLP 
+    #     context = nlp.
+    #     return context
         
     # Extracts state relevant info and updates state
     def extract_info(self, user_query):
@@ -49,6 +55,7 @@ class ConversationController():
 
         # If state is not full
         elif self.state_not_full():
+            response = "COULDNT GET APPROPRIATE RESPONSE"
             print("None in self.state")
             # Acquire more info
             if self.state['to'] is None:
@@ -69,21 +76,25 @@ class ConversationController():
         elif not self.state_confirmed:
             return "So you want to travel from %s to %s on the %s at %s?" % (self.state['to'], self.state['from'], self.state['date'], self.state['time'])
 
-    
+    # Determine how to respond
     def respond(self, user_query):
         print('In controller.respond()')
+        print(self.state)
 
         # Recieve context from NLP : 'chat' , 'booking' , 'delay'
-        context = self.determine_context(user_query)
+        context = self.nlp.classify_user_sentence(user_query)
         print('context is:', context)
 
         if context is "booking":
             # Get info from NLP
-            # Update state   :   self.update_state(NLP.get_journey_info(user_query))
+            print(self.state)
+            self.nlp.get_journey_info(user_query, self.state)
+            print(self.state)
             response = self.determine_train_response()
             print('response is:', response)
         else:
             response = "General chit chat"
         
         return response
+
 
