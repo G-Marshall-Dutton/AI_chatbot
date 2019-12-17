@@ -5,6 +5,7 @@ import datetime
 import sys
 sys.path.insert(1, 'C:\\Users\\jezba\\Documents\\AI_chatbot\\delay_prediction')
 from DatabaseQuerier import DatabaseQuerier
+from sklearn.model_selection import train_test_split
 ###
 
 ###############################################
@@ -51,19 +52,33 @@ from DatabaseQuerier import DatabaseQuerier
 ###########################################
 ###############################################
 
-def createNearestNeighbours():
+def dayIndexToString(index):
+    switcher = {
+        0: "mon",
+        1: "tues",
+        2: "weds",
+        3: "thurs",
+        4: "fri",
+        5: "sat",
+        6: "sun",
+    }
+    return switcher.get(index, "Invalid day")
+
+def testing():
     import numpy as np
     import matplotlib.pyplot as plt
     import pandas.io.sql as sqlio
     import pandas
 
+    #get today as weekday index
     day = datetime.datetime.today().weekday()
+    #get time now as HHMMSS
     time = datetime.datetime.now().time().strftime("%H:%M:%S")
 
     dataframe = DatabaseQuerier().testReturnDataframe('NRCH','LIVST')
 
-    reduced_df = pandas.DataFrame(columns = ["day","delay_s"])
-    print(reduced_df)
+    #Initialize final dataset
+    reduced_df = pandas.DataFrame(columns = ["rid","day","delay_s"])
 
     count = 0
     for row in dataframe.iterrows():
@@ -71,30 +86,41 @@ def createNearestNeighbours():
         # Get data in correct formats
         dep_date = row[1]['rid'][0:8]
         dep_date = datetime.datetime.strptime(dep_date,"%Y%m%d")
-        dep_date_f = datetime.datetime.strftime(dep_date,"%Y%m%d")
-
+        #dep_date_f = datetime.datetime.strftime(dep_date,"%Y%m%d")
 
         # Get day of week as index
         day = dep_date.weekday()
+        #day = dayIndexToString(day)
 
         # Calculate journey delay
         a = datetime.datetime.strptime(row[1]['dep_at'],"%H:%M")
         b = datetime.datetime.strptime(row[1]['arr_at'],"%H:%M")
         delay = b - a
+
+        #If negative, passed midnight, make positive
         if delay.total_seconds() < 0:
             delay = delay + datetime.timedelta(days=1)
         
-        reduced_df.loc[count] = [day,delay.total_seconds()]
+        reduced_df.loc[count] = [row[1]['rid'],day,delay.total_seconds()]
         count = count + 1
+    print("DONE")
+    # X = reduced_df.drop(['delay_s'], axis=1)
+    # #separate target values
+    # y = reduced_df['delay_s'].values
+    # print(y[0:5])
 
-    #reduced_df['day'] = pandas.to_numeric(reduced_df['day'])
-    #reduced_df['delay_s'] = pandas.to_numeric(reduced_df['delay_s'])
-    print(reduced_df)
-    awd = reduced_df.groupby('day')['delay_s'].mean()
-    print(awd)
-    awd.plot(kind="bar")
-    plt.tight_layout()
-    plt.show()
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1, stratify=y)
+    # # ## Import the Classifier.
+    # from sklearn.neighbors import KNeighborsClassifier
+    # ## Instantiate the model with 5 neighbors. 
+    # knn = KNeighborsClassifier(n_neighbors=5)
+    # ## Fit the model on the training data.
+    # knn.fit(X_train, y_train)
+    # ## See how the model performs on the test data.
+    # print(knn.score(X_test, y_test))
+
+    # print(reduced_df)
+
 
 ####################################################
 #
@@ -114,14 +140,8 @@ class DelayPredictor:
 ###############################################################
 ###################### Test Harness  ######################
 if __name__ == "__main__":
-    # print("delays Test Environment")
-    # db = DatabaseQuerier()
-    # rids = db.getAllPreviousJourneyRIDs()
-    # for i in range(len(rids)):
-    #     rids[i] = rids[i][0]
-    # print(rids)
     
-    createNearestNeighbours()
+    testing()
     
 
 

@@ -137,6 +137,7 @@ class DatabaseQuerier:
                 AND arr_at IS NOT NULL
                 ) AS y on x.rid = y.rid_to
                 ORDER BY rid
+                LIMIT 2000
             """.format(past_journeys,f,t)
         
         # Execute query and get results
