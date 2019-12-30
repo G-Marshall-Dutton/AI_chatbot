@@ -51,6 +51,29 @@ class ReasoningEngine:
         "how late is my train likely to be?"
     )
 
+    affirmationTypes = (
+        "yes",
+        "yeah",
+        "that's right",
+        "right",
+        "correct",
+        "that's right",
+        "yep",
+        "aye",
+    )
+
+    refutationTypes = (
+        "no",
+        "nah",
+        "naw",
+        "no thanks",
+        "no, that's not right",
+        "incorrect",
+        "that's wrong",
+        "no, that's wrong",
+        "not, that's not right"
+    )
+
 
     def make_decision(self,classifiedSentence):
         # is looking for train ticket? if query.type == 'query'
@@ -77,14 +100,7 @@ class ReasoningEngine:
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
             if cleaned_sentence.similarity(cleaned_previous) > best_score:
                 best_score = cleaned_sentence.similarity(cleaned_previous)
-
-        # determine if a CHAT type
-        for previous in self.GREETINGS:
-            example = nlp(previous)
-            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
-            if cleaned_sentence.similarity(cleaned_previous) > best_score:
-                typ = "chat"
-                
+              
         # determine if a DELAY type
         for previous in ReasoningEngine.delayInformation:
             example = nlp(previous)
@@ -92,12 +108,46 @@ class ReasoningEngine:
             if cleaned_sentence.similarity(cleaned_previous) > best_score:
                 typ = "delay"
 
+        # determine if a CHAT type
+        for previous in self.GREETINGS:
+            example = nlp(previous)
+            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+            if cleaned_sentence.similarity(cleaned_previous) > best_score:
+                typ = "chat"
+
         # TODO: better way of classifying intent?
 
         # 'chat' or 'query' for now
         print(typ)
         #return ClassifiedSentence(sentence,typ)
         return typ
+
+    # return true if user replies with affirmation, else false
+    def affirmation(self, sentence):
+
+        result = False
+        
+        sent = nlp(sentence)
+        cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
+        best_score = 0
+
+        # determine if a YES type
+        for previous in ReasoningEngine.affirmationTypes:
+            example = nlp(previous)
+            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+            if cleaned_sentence.similarity(cleaned_previous) > best_score:
+                best_score = cleaned_sentence.similarity(cleaned_previous)
+                result = True
+
+        # determine if a NO type
+        for previous in ReasoningEngine.refutationTypes:
+            example = nlp(previous)
+            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+            if cleaned_sentence.similarity(cleaned_previous) > best_score:
+                best_score = cleaned_sentence.similarity(cleaned_previous)
+                result = False
+
+        return result
         
 
     # attempts to return journey info

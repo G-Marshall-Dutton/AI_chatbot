@@ -25,7 +25,7 @@ while(True):
     # print('get_journey_info returns:')
     # print(dict)
 
-    # TEST CODE FOR CLASSIFYING
+    # # TEST CODE FOR CLASSIFYING
 
     # classify input
     nlp_classified = re.classify_user_sentence(userInput)
@@ -33,3 +33,7 @@ while(True):
     # print classification returned
     print(nlp_classified)
 
+    # # TEST CODE FOR AFFIRMATOR
+    # nlp_affirm = re.affirmation(userInput)
+
+    # print(nlp_affirm)
