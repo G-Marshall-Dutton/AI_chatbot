@@ -39,6 +39,18 @@ class ReasoningEngine:
         "i need a cheap and quick train to london tomorrow"
     )
 
+    delayInformation = (
+        "i am delayed",
+        "how long am i likely to be delayed?",
+        "how late is my train?",
+        "my train is late",
+        "how much longer is this train going to be?",
+        "delay",
+        "late",
+        "can you help me with my train delay?",
+        "how late is my train likely to be?"
+    )
+
 
     def make_decision(self,classifiedSentence):
         # is looking for train ticket? if query.type == 'query'
@@ -57,6 +69,8 @@ class ReasoningEngine:
         sent = nlp(sentence)
         cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
         best_score = 0
+
+        # determine if a BOOKING type
         typ = "booking"
         for previous in ReasoningEngine.trainInformation:
             example = nlp(previous)
@@ -64,13 +78,20 @@ class ReasoningEngine:
             if cleaned_sentence.similarity(cleaned_previous) > best_score:
                 best_score = cleaned_sentence.similarity(cleaned_previous)
 
+        # determine if a CHAT type
         for previous in self.GREETINGS:
             example = nlp(previous)
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
             if cleaned_sentence.similarity(cleaned_previous) > best_score:
                 typ = "chat"
+                
+        # determine if a DELAY type
+        for previous in ReasoningEngine.delayInformation:
+            example = nlp(previous)
+            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+            if cleaned_sentence.similarity(cleaned_previous) > best_score:
+                typ = "delay"
 
-        # TODO: add "delay"
         # TODO: better way of classifying intent?
 
         # 'chat' or 'query' for now
