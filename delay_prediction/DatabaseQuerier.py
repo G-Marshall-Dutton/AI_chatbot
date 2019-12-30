@@ -126,7 +126,7 @@ class DatabaseQuerier:
         self.openConnection()
 
         query = """
-            SELECT rid,tpl,dep_at,tpl_to,arr_at FROM
+            SELECT rid,tpl,arr_at,tpl_to,dep_at FROM
                 (SELECT rid,tpl,dep_at FROM nrch_livst_a51 
                 WHERE tpl = 'NRCH'
                 AND dep_at IS NOT NULL
@@ -137,7 +137,7 @@ class DatabaseQuerier:
                 AND arr_at IS NOT NULL
                 ) AS y on x.rid = y.rid_to
                 ORDER BY rid
-                LIMIT 2000
+                LIMIT 100
             """.format(past_journeys,f,t)
         
         # Execute query and get results
@@ -167,6 +167,22 @@ class DatabaseQuerier:
         query = """
             SELECT * FROM {0}
             """.format(stations)
+        
+        # Execute query and get results
+        self.cursor.execute(query)
+        records = self.cursor.fetchall()
+
+        # Close connection
+        self.closeConnection()
+        return records
+
+    def getAllData(self, limit):
+            # Open Connection
+        self.openConnection()
+
+        query = """
+            SELECT * FROM {0} LIMIT {1}
+            """.format(past_journeys,limit)
         
         # Execute query and get results
         self.cursor.execute(query)

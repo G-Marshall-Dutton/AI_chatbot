@@ -22,7 +22,7 @@ from sklearn.model_selection import train_test_split
 ##### Working Times
 # wta                   string              Working (staff) Time of Arrival
 # wtp                   string              Working Time of Passing
-# wtd                   boolean             Working Time of Departure
+# wtd                   String              Working Time of Departure
 
 ##### Estimated Arrival Times
 # arr_et                string              Estimated Arrival Time
@@ -64,25 +64,29 @@ def dayIndexToString(index):
     }
     return switcher.get(index, "Invalid day")
 
-def testing():
+def secondsToTime(seconds):
+    return str(datetime.timedelta(seconds=seconds))
+
+def testing(): ## TESTING HERE
     import numpy as np
     import matplotlib.pyplot as plt
     import pandas.io.sql as sqlio
     import pandas
 
-    #get today as weekday index
-    day = datetime.datetime.today().weekday()
-    #get time now as HHMMSS
-    time = datetime.datetime.now().time().strftime("%H:%M:%S")
+    queryDay = datetime.datetime.today().weekday() #get today as weekday index
 
+    # Get 24hr time in seconds
+    now = datetime.datetime.now()
+    queryTimeInDayS = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+
+    # get all NRCH to LIVST journeys with dep and arr time
     dataframe = DatabaseQuerier().testReturnDataframe('NRCH','LIVST')
 
-    #Initialize final dataset
-    reduced_df = pandas.DataFrame(columns = ["rid","day","delay_s"])
+    #Initialize final dataset to be used in classifier
+    reduced_df = pandas.DataFrame(columns = ["day","time_at_station","journeyTime"])
 
     count = 0
     for row in dataframe.iterrows():
-
         # Get data in correct formats
         dep_date = row[1]['rid'][0:8]
         dep_date = datetime.datetime.strptime(dep_date,"%Y%m%d")
@@ -90,36 +94,56 @@ def testing():
 
         # Get day of week as index
         day = dep_date.weekday()
+        tmp = dep_date.toordinal()
         #day = dayIndexToString(day)
 
         # Calculate journey delay
         a = datetime.datetime.strptime(row[1]['dep_at'],"%H:%M")
         b = datetime.datetime.strptime(row[1]['arr_at'],"%H:%M")
-        delay = b - a
+        journeyTime = b - a
 
         #If negative, passed midnight, make positive
-        if delay.total_seconds() < 0:
-            delay = delay + datetime.timedelta(days=1)
+        if journeyTime.total_seconds() < 0:
+            journeyTime = journeyTime + datetime.timedelta(days=1)
+
+        timeInDayS = (a - a.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+
         
-        reduced_df.loc[count] = [row[1]['rid'],day,delay.total_seconds()]
+        reduced_df.loc[count] = [day,timeInDayS,journeyTime.total_seconds()]
+        #print(reduced_df.loc[count])
         count = count + 1
     print("DONE")
-    # X = reduced_df.drop(['delay_s'], axis=1)
-    # #separate target values
-    # y = reduced_df['delay_s'].values
-    # print(y[0:5])
+    
 
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1, stratify=y)
-    # # ## Import the Classifier.
-    # from sklearn.neighbors import KNeighborsClassifier
-    # ## Instantiate the model with 5 neighbors. 
-    # knn = KNeighborsClassifier(n_neighbors=5)
-    # ## Fit the model on the training data.
-    # knn.fit(X_train, y_train)
-    # ## See how the model performs on the test data.
-    # print(knn.score(X_test, y_test))
+    # CLASSIFICATION HERE
+    from sklearn.neighbors import NearestNeighbors
 
-    # print(reduced_df)
+    X = reduced_df.drop(['journeyTime'], axis=1) # Remove predicting value for X dataframe
+    y = reduced_df['journeyTime'].values # Seperate target predicting values into own dataframe
+
+    #Split data
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
+    
+    neigh = NearestNeighbors(n_neighbors=1)
+    neigh.fit(X_train)
+
+    count = 0
+    for row in X_test.iterrows():        
+
+        if count > 100:
+            break
+        count = count + 1
+
+        day = row[1][0]
+        time = row[1][1]
+        print(day," ",secondsToTime(time),"(",time,")")
+        prediction = neigh.kneighbors([[day, time]]) # 0:distance 1:position of neighbour
+        neighbourIndex = prediction[1][0][0]
+        pred_day = X_train.iloc(0)[neighbourIndex][0]
+        pred_time = X_train.iloc(0)[neighbourIndex][1]
+        #pred_delay = y_train.iloc(0)[0][0]
+        print("     ->",pred_day,pred_time)
+    
 
 
 ####################################################
