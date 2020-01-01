@@ -137,7 +137,7 @@ class DatabaseQuerier:
                 AND arr_at IS NOT NULL
                 ) AS y on x.rid = y.rid_to
                 ORDER BY rid
-                LIMIT 100
+                LIMIT 20
             """.format(past_journeys,f,t)
         
         # Execute query and get results
