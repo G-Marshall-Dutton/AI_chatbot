@@ -127,22 +127,51 @@ def testing(): ## TESTING HERE
     neigh = NearestNeighbors(n_neighbors=1)
     neigh.fit(X_train)
 
+    # Display train data
+    count = 0
+    for row in X_train.iterrows():
+        day = row[1][0]
+        time = row[1][1]
+
+        # Input (Test)
+        print("Train(%d) %s %s -> %s" %(count,day,secondsToTime(time),y_train[count]))
+        count = count + 1
+
+    # Display test data
+    print()
+    count = 0
+    for row in X_test.iterrows():
+        day = row[1][0]
+        time = row[1][1]
+
+        # Input (Test)
+        print("Test(%d) %s %s -> %s" %(count,day,secondsToTime(time),y_test[count]))
+        count = count + 1
+
+    # Classify
+    print()
     count = 0
     for row in X_test.iterrows():        
 
         if count > 100:
             break
-        count = count + 1
+        
 
         day = row[1][0]
         time = row[1][1]
-        print(day," ",secondsToTime(time),"(",time,")")
+
+        # Input (Test)
+        print("%10s %s %s -> %s" %("Test:",day,secondsToTime(time),y_train[count]))
+
         prediction = neigh.kneighbors([[day, time]]) # 0:distance 1:position of neighbour
-        neighbourIndex = prediction[1][0][0]
-        pred_day = X_train.iloc(0)[neighbourIndex][0]
-        pred_time = X_train.iloc(0)[neighbourIndex][1]
-        #pred_delay = y_train.iloc(0)[0][0]
-        print("     ->",pred_day,pred_time)
+        neighbourIndex = prediction[1][0][0] #Index of neighbour in the training list
+        pred_day = X_train.iloc(0)[neighbourIndex][0] #Day value of neighbour
+        pred_time = X_train.iloc(0)[neighbourIndex][1] #Time of train of neighbour
+        pred_delay = y_test[count] #Journey time of neighbour
+
+        # Output (Neighbour/Train)
+        print("%10s %s %s -> %s\n" %("Neighbour:",day,secondsToTime(pred_time),y_test[count]))
+        count = count + 1
     
 
 
