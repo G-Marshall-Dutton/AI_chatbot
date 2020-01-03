@@ -1,15 +1,18 @@
-        
+from webScraper import webScraper
 
 class ConversationController():
     def __init__(self, nlp):
+
+        self.scraper = webScraper.webScraper()
+
         # Chat : Booking : Delay 
         self.nlp = nlp
         self.context = "Chat"
         self.state = {
-            'from': None,
-            'to': None,
-            'date': None,
-            'time': None,
+            'from': "CBN",
+            'to': "NRW",
+            'date': '200220',
+            'time': '0845',
         }
         print("!!%s", self.state.keys())
         for k, v in self.state.items():
@@ -73,13 +76,17 @@ class ConversationController():
             return response
 
         # If we have all the needed info, confirm its correct
-        elif not self.state_confirmed:
-            return "So you want to travel from %s to %s on the %s at %s?" % (self.state['to'], self.state['from'], self.state['date'], self.state['time'])
+        # elif not self.state_confirmed:
+        else:
+            response = self.getTicket()
+            return response
+            #return "So you want to travel from %s to %s on the %s at %s?" % (self.state['to'], self.state['from'], self.state['date'], self.state['time'])
 
     # Determine how to respond
     def respond(self, user_query):
         print('In controller.respond()')
         print(self.state)
+        self.scraper.test()
 
         # Recieve context from NLP : 'chat' , 'booking' , 'delay'
         context = self.nlp.classify_user_sentence(user_query)
@@ -96,5 +103,11 @@ class ConversationController():
             response = "General chit chat"
         
         return response
+
+    # Returns web scrapped ticket info
+    def getTicket(self):
+        ticketInfo = self.scraper.scrape(self.state)
+        
+        return ticketInfo
 
 
