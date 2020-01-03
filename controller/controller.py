@@ -14,9 +14,6 @@ class ConversationController():
             'date': '200220',
             'time': '0845',
         }
-        print("!!%s", self.state.keys())
-        for k, v in self.state.items():
-            print(k, v)
 
         self.response_needed = 4
         self.state_confirmed = False
@@ -26,9 +23,9 @@ class ConversationController():
     def update_state(self, newInfo):
         self.state.update(newInfo)
 
+    # Returns True if state contains a 'none' value
     def state_not_full(self):
         for k, v in self.state.items():
-            print(k, v)
             if v is None:
                 return True
 
@@ -40,6 +37,12 @@ class ConversationController():
     #     # Pass to NLP 
     #     context = nlp.
     #     return context
+
+
+    # Prints state
+    def print_state(self):
+        for k, v in self.state.items():
+            print(k, v)
         
     # Extracts state relevant info and updates state
     def extract_info(self, user_query):
@@ -84,13 +87,12 @@ class ConversationController():
 
     # Determine how to respond
     def respond(self, user_query):
-        print('In controller.respond()')
-        print(self.state)
-        self.scraper.test()
+        print('RESPONDING...')
 
         # Recieve context from NLP : 'chat' , 'booking' , 'delay'
         context = self.nlp.classify_user_sentence(user_query)
-        print('context is:', context)
+        print('DETERMINING CONTEXT...')
+        print('CONTEXT:', context)
 
         if context is "booking":
             # Get info from NLP

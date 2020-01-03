@@ -8,9 +8,6 @@ from flask import Flask, render_template,request,make_response,jsonify
 class webScraper():
 
 
-    def test(self):
-        print("TESTING")
-
     def scrape(self, journeyDict):
 
         print("SCRAPING TICKET INFO... ")
@@ -37,13 +34,12 @@ class webScraper():
         # Scrape cheapest ticket info
         element= page_soup.find("td",{"class":"has-cheapest"}).find("script")
 
-        # remove script tags from 'element'
+        # Remove script tags from 'element'
         text = element.get_text()
 
-        # TEST CODE!!!
+        # Find full price from page
         price = page_soup.find("td",{"class":"has-cheapest"}).find("label")
         price = price.get_text()
-        print("!!!", price)
 
         # Convert to python Dict
         journeyInfo = json.loads(text)

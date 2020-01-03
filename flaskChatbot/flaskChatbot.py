@@ -62,7 +62,7 @@ def chat():
     # Normal response
     if(isinstance(response, str )):
         status = "ticketChat"
-    # Ticket info
+    # Ticket info (stored in a dict)
     elif(isinstance(response, dict )):
         status = "ticketInfo"
 
