@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 ###
 import csv
 
-with open('InitialResults.csv', mode='w') as results:
+with open('tempResults.csv', mode='a') as results:
     results_writer = csv.writer(results, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
     ###############################################
@@ -86,8 +86,7 @@ with open('InitialResults.csv', mode='w') as results:
         return date
 
 
-    def version1(neighbours): ## TESTING HERE
-
+    def version1(neighbours,multiplier): ## TESTING HERE
         queryDay = datetime.datetime.today().weekday() #get today as weekday index
 
         # Get 24hr time in seconds
@@ -123,7 +122,7 @@ with open('InitialResults.csv', mode='w') as results:
             timeInDayS = (a - a.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
 
 
-            reduced_df.loc[count] = [day*1000,timeInDayS,journeyTime.total_seconds()]
+            reduced_df.loc[count] = [day*multiplier,timeInDayS,journeyTime.total_seconds()]
             #print(reduced_df.loc[count])
             count = count + 1
         print("DONE")
@@ -141,7 +140,6 @@ with open('InitialResults.csv', mode='w') as results:
         neigh = NearestNeighbors(n_neighbors=neighbours)
         neigh.fit(X_train)
 
-        displayLimit = 10;
 
         # Display train data
         # count = 0
@@ -202,7 +200,7 @@ with open('InitialResults.csv', mode='w') as results:
         accuracy = (numberAccurate/X_test.size)*100
         print(neighbours,"Neighbours"," gives ACCURACY: ",accuracy)
 
-        results_writer.writerow([neighbours, accuracy])
+        results_writer.writerow([neighbours, multiplier, accuracy])
 
     def version2():
         # Look at current station, knowing how late they currently are to get the planned departure time, get actual arrival time at destination
@@ -239,8 +237,10 @@ with open('InitialResults.csv', mode='w') as results:
     ###############################################################
     ###################### Test Harness  ######################
     if __name__ == "__main__":
-        for i in range(1,500,20):
-            version1(i)
+
+        results_writer.writerow(["14neighbours 1-10000multiplier"])
+        for i in range(1000, 20000, 1000):
+            version1(14, i)
     
 
 
