@@ -241,3 +241,103 @@ class ReasoningEngine:
             # date entity found, add to dictionary
             if(ent.label_ is "TIME"):
                 dict.update({"time": ent.text}) 
+
+    # attempts to return delay info
+    # FROM / TO / CURR_AT / DELAY_MINS
+    # TODO: controller will pass in a dict of what it knows, it is this functions job to try and identify information from the text, update the dictionary and return it
+    def get_delay_info(self, text, dict):
+        
+        pnouns = [] # stores the proper nouns detected in the text, used to count and see if it's to/from or both
+        pnouns_pos = []
+        
+        # convert to tokens
+        doc = nlp(text)
+
+        # keeps track of position through doc
+        position = 0
+
+        # iterate through tokens, store pronouns and positions
+        for token in doc:
+            
+            # debug to display detected tokens
+            print("Token type is " + str(token.pos_) + " @ position " + str(position)) 
+            
+            # if proper noun is detected
+            if token.pos_ is 'PROPN':
+
+                # store all found pronouns
+                pnouns.append(token.text)
+
+                # store position of pnoun
+                pnouns_pos.append(position)
+                
+            # update position through token iteration
+            position = position + 1
+
+        # check if one source/destination is missing, if so and only one pronoun found, must be it
+        if(len(pnouns) == 1):
+
+            print("Only 1 pnoun detected")
+
+            # if only FROM is missing
+            if(dict.get("from") is None and dict.get("to") is not None and dict.get("at") is not None):
+                print("Adding a from ONLY")
+                dict.update({"from": pnouns[0]})
+
+            # if only TO is missing
+            if(dict.get("from") is not None and dict.get("to") is None and dict.get("at") is not None):
+                print("Adding a to ONLY")
+                dict.update({"to": pnouns[0]}) 
+
+            # if only AT is missing
+            if(dict.get("from") is not None and dict.get("to") is not None and dict.get("at") is None):
+                print("Adding a at ONLY")
+                dict.update({"at": pnouns[0]}) 
+
+            # if only one value is found, check not in first position, because can't look at backward neighbour
+            if(pnouns_pos[0] > 0):
+
+                # if previous word is "from", then must be source 
+                if(token.nbor(-1).text == "from"):
+                    dict.update({"from": pnouns[0]})   # add to dict         
+
+                # if previous word is "to", then must be destination
+                if(token.nbor(-1).text == "to"):
+                    dict.update({"to": pnouns[0]}) 
+
+
+        # otherwise if 3 pnouns found then determine to/from 
+        elif(len(pnouns) < 4):
+
+            # loop through pnouns
+            for i in range(len(pnouns)):
+
+                # check not in first position, because can't look at backward neighbour
+                if(pnouns_pos[i] > 0):
+
+                    # if previous word is "from", then must be source 
+                    if(token.nbor(-1).text == "from"):
+                        dict.update({"from": pnouns[i]})   # add to dict         
+                        print("from added")
+
+                    # if previous word is "to", then must be destination
+                    if(token.nbor(-1).text == "to"):
+                        dict.update({"to": pnouns[i]}) 
+                        print("to added")
+                    
+                    # if previous word is "at" or "is", then must be current station user is at
+                    if(token.nbor(-1).text == "at" or token.nbor(-1).text == "is"):
+                        dict.update({"at": pnouns[i]}) 
+                        print("at added")
+
+
+        # otherwise more than 2 pnouns found, so do nothing
+        #else:
+            #print("No proper nouns found")
+
+        # iterate through entities, looking for current delay
+        for token in doc: 
+
+            # date entity found, add to dictionary
+            if(token.pos_ is "NUM"):
+                dict.update({"delay_mins": token.text}) 
