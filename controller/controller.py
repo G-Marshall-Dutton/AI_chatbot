@@ -12,7 +12,7 @@ class ConversationController():
             'from': None,
             'to': None,
             'date': None,
-            'time': '1430',
+            'time': '1430',   
         }
 
         self.print_state
@@ -70,6 +70,7 @@ class ConversationController():
 
             # Return reset message 
             response = "Let's start again... \nWhere are you traveling to?"
+            return response
 
         # If state is not full
         elif self.state_not_full():
@@ -103,14 +104,17 @@ class ConversationController():
 
         # If we're waiting on ticket info confirmation
         if(self.awaiting_confirmation):
-
+            print(user_query)
+            
             # NEED TO SWAP THIS FOR NLP
-            if(user_query is "yes" or "Yes"):
+            if(user_query == "yes"):
                 self.state_confirmed = True
                 context = "booking"
+                print("CONFIRMED")
             else:
                 self.state_confirmed = False
-                context = "booking"
+                context = "booking" 
+                print("NOT CONFIRMED") 
         else:
             # Recieve context from NLP : 'chat' , 'booking' , 'delay'
             context = self.nlp.classify_user_sentence(user_query)

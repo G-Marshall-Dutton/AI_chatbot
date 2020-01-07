@@ -61,7 +61,7 @@ def chat():
     # Determine if its a normal response or the scraped ticket info
     # Normal response
     if(isinstance(response, str )):
-        status = "ticketChat"
+        status = "ticketChat" 
     # Ticket info (stored in a dict)
     elif(isinstance(response, dict )):
         status = "ticketInfo"
