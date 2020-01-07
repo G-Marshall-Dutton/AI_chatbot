@@ -85,127 +85,12 @@ with open('tempResults.csv', mode='a') as results:
         date = datetime.datetime.strptime(date_string, "%Y%m%d")
         return date
 
-
-    def version1(neighbours,multiplier): ## TESTING HERE
-        queryDay = datetime.datetime.today().weekday() #get today as weekday index
-
-        # Get 24hr time in seconds
-        now = datetime.datetime.now()
-        queryTimeInDayS = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
-
-        # get all NRCH to LIVST journeys with dep and arr time
-        dataframe = DatabaseQuerier().testReturnDataframe('NRCH','LIVST')
-
-        # Initialize final dataset to be used in classifier
-        reduced_df = pandas.DataFrame(columns = ["day","time_at_station","journeyTime"])
-
-        count = 0
-        for row in dataframe.iterrows():
-            # Get data in correct formats
-            dep_date = row[1]['rid'][0:8]
-            dep_date = datetime.datetime.strptime(dep_date,"%Y%m%d")
-            #dep_date_f = datetime.datetime.strftime(dep_date,"%Y%m%d")
-
-            # Get day of week as index
-            day = dep_date.weekday()
-            tmp = dep_date.toordinal()
-            #day = dayIndexToString(day)
-
-            # Calculate journey delay
-            a = datetime.datetime.strptime(row[1]['dep_at'],"%H:%M")
-            b = datetime.datetime.strptime(row[1]['arr_at'],"%H:%M")
-            journeyTime = b - a
-            #If negative, passed midnight, make positive
-            if journeyTime.total_seconds() < 0:
-                journeyTime = journeyTime + datetime.timedelta(days=1)
-
-            timeInDayS = (a - a.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
-
-
-            reduced_df.loc[count] = [day*multiplier,timeInDayS,journeyTime.total_seconds()]
-            #print(reduced_df.loc[count])
-            count = count + 1
-        print("DONE")
-
-
-        # CLASSIFICATION HERE
-
-
-        X = reduced_df.drop(['journeyTime'], axis=1) # Remove predicting value for X dataframe
-        y = reduced_df['journeyTime'].values # Seperate target predicting values into own dataframe
-
-        #Split data
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
-
-        neigh = NearestNeighbors(n_neighbors=neighbours)
-        neigh.fit(X_train)
-
-
-        # Display train data
-        # count = 0
-        # for row in X_train.iterrows():
-        #     day = row[1][0]
-        #     time = row[1][1]
-        #
-        #     # Input (Test)
-        #     print("Train(%d) %s %s -> %s" %(count,day,secondsToTime(time),y_train[count]))
-        #     count = count + 1
-        #
-        #     if count > displayLimit:
-        #         break;
-
-        # Display test data
-        # print()
-        # count = 0
-        # for row in X_test.iterrows():
-        #     day = row[1][0]
-        #     time = row[1][1]
-        #
-        #     # Input (Test)
-        #     print("Test(%d) %s %s -> %s" %(count,day,secondsToTime(time),y_test[count]))
-        #     count = count + 1
-        #
-        #     if count > displayLimit:
-        #         break;
-
-        # Classify
-        #print()
-        count = 0
-        numberAccurate = 0
-
-        for row in X_test.iterrows():
-
-            day = row[1][0]
-            time = row[1][1]
-
-            # Input (Test)
-            #print("%10s %s %s -> %s" %("Test:",day,secondsToTime(time),y_train[count]))
-
-            predictions = neigh.kneighbors([[day, time]]) # 0:distance 1:position of neighbour
-
-            final_delay = 0
-            for prediction_distance, prediction_index in zip(predictions[0][0],predictions[1][0]):
-                prediction_delay = y_train[prediction_index]
-                final_delay = final_delay + prediction_delay
-
-            final_delay = final_delay / predictions[0][0].size
-
-            #print("Predicted: "+str(final_delay)+"   Actual: "+str(y_train[count]), end='')
-            if isAccurate(y_test[count],final_delay,60):
-                numberAccurate = numberAccurate + 1
-               # print(" ACC")
-            #else:
-                #print(" NOT ACC")
-            count = count + 1
-        accuracy = (numberAccurate/X_test.size)*100
-        print(neighbours,"Neighbours"," gives ACCURACY: ",accuracy)
-
-        results_writer.writerow([neighbours, multiplier, accuracy])
-
-    def version2():
+    def version2(_to,_from, type):
         # Ask user what the current delay is, where they are travelling to, the last station they were/are at
-        df = DatabaseQuerier().getDelayedTrains('NRCH','LIVST')
-
+        if type == "all":
+            df = DatabaseQuerier().getAllTrains(_to,_from)
+        else:
+            df = DatabaseQuerier().getDelayedTrains(_to, _from)
         # Get time now as seconds since midnight
         #now = datetime.datetime.now()
         #query_time_s = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
@@ -218,21 +103,22 @@ with open('tempResults.csv', mode='a') as results:
         # print("Local Time: ",query_time_s,"  DELAY: ",delay,"   dep_at: ",start_station_dep_time_s)
 
         # Initialize final dataset to be used in classifier
-        classification_df = pandas.DataFrame(columns=["time_at_station_s", "current_delay_s","arrival_time_s"])
+        classification_df = pandas.DataFrame(columns=["time_at_station_s", "current_delay_s","rid","arrival_time_s"])
 
         count = 0
         for row in df.iterrows():
             
-            print(row)
+            #print(row)
             # 1:2 planned dep, 1:3 actual dep, 1:5 planned arrival, 1:6 actual arrival
 
             # Planned departure datetime
+
             try:
                 planned_departure = datetime.datetime.strptime(row[1][0][0:8]+row[1][2],"%Y%m%d%H:%M:%S")
             except ValueError:
                 planned_departure = datetime.datetime.strptime(row[1][0][0:8] + row[1][2], "%Y%m%d%H:%M")
             planned_departure = planned_departure - planned_departure.replace(hour=0, minute=0, second=0, microsecond=0)
-            print(planned_departure)
+            #print(planned_departure)
 
             # Actual departure datetime
             try:
@@ -240,11 +126,11 @@ with open('tempResults.csv', mode='a') as results:
             except ValueError:
                 actual_departure = datetime.datetime.strptime(row[1][0][0:8] + row[1][3], "%Y%m%d%H:%M")
             actual_departure = actual_departure - actual_departure.replace(hour=0, minute=0, second=0, microsecond=0)
-            print(actual_departure)
+            #print(actual_departure)
 
             # Delay at departure station
             departure_delay = actual_departure-planned_departure
-            print(departure_delay)
+            #print(departure_delay)
 
             # Actual arrival datetime
             try:
@@ -252,49 +138,24 @@ with open('tempResults.csv', mode='a') as results:
             except ValueError:
                 actual_arrival = datetime.datetime.strptime(row[1][0][0:8] + row[1][6], "%Y%m%d%H:%M")
             actual_arrival = actual_arrival - actual_arrival.replace(hour=0, minute=0, second=0, microsecond=0)
-            print(actual_arrival)
+            #print(actual_arrival)
 
 
-            time_until_arrival = actual_arrival - actual_departure
-            print(time_until_arrival)
+            #time_until_arrival = actual_arrival - actual_departure
+            #print(time_until_arrival)
 
-            print(planned_departure,departure_delay,time_until_arrival)
-            classification_df.loc[count] = [planned_departure.total_seconds(), departure_delay.total_seconds(), time_until_arrival.total_seconds()]
+            #print("rid:",row[1][0],"ptd:",planned_departure,"delay:",departure_delay,"arrival:",actual_arrival)
+            classification_df.loc[count] = [planned_departure.total_seconds(), departure_delay.total_seconds(),row[1][0], actual_arrival.total_seconds()]
             count = count + 1
 
-        X = classification_df.drop(['arrival_time_s'], axis=1)  # Remove predicting value for X dataframe
-        y = classification_df['arrival_time_s'].values  # Seperate target predicting values into own dataframe
+        X = classification_df.drop(['arrival_time_s','rid'], axis=1)  # Remove predicting value for X dataframe
+        y = classification_df[['arrival_time_s','rid']].values  # Seperate target predicting values into own dataframe
 
         # Split data
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=9)
 
         neigh = NearestNeighbors(n_neighbors=1)
         neigh.fit(X_train)
-
-        count = 0
-        displayLimit = 10
-        for row in X_train.iterrows():
-            time_at_station_s = row[1][0]
-            current_delay_s = row[1][1]
-
-            # Input (Test)
-            print("Train(%d) %s| %s | -> %s" %(count,secondsToTime(time_at_station_s),secondsToTime(current_delay_s), secondsToTime(y_train[count])))
-            count = count + 1
-
-            if count > displayLimit:
-                break;
-
-        count = 0
-        for row in X_test.iterrows():
-            time_at_station_s = row[1][0]
-            current_delay_s = row[1][1]
-
-            # Input (Test)
-            print("Test(%d) %s| %s | -> %s" %(count,secondsToTime(time_at_station_s),secondsToTime(current_delay_s),secondsToTime(y_train[count])))
-            count = count + 1
-
-            if count > displayLimit:
-                break
 
         count = 0
         numberAccurate = 0
@@ -303,29 +164,127 @@ with open('tempResults.csv', mode='a') as results:
             time_at_station_s = row[1][0]
             current_delay_s = row[1][1]
 
+            print("TEST %d    ( %s):      dep_at=%s, delay=%s   ->  arrival:%s" %(count, y_test[count][1],secondsToTime(time_at_station_s),current_delay_s,secondsToTime(y_test[count][0])))
+
             # Input (Test)
             predictions = neigh.kneighbors([[time_at_station_s, current_delay_s]])  # 0:distance 1:position of neighbour
 
             arrival_time = 0
-            for prediction_distance, prediction_index in zip(predictions[0][0], predictions[1][0]):
-                prediction_delay = y_train[prediction_index]
-                arrival_time = arrival_time + prediction_delay
+            #for prediction_distance, prediction_index in zip(predictions[0][0], predictions[1][0]):
+            predicted_arrival = y_train[predictions[1]][0][0][0]
+            #arrival_time = arrival_time + predicted_arrival
 
-            arrival_time = arrival_time / predictions[0][0].size
+            #arrival_time = arrival_time / predictions[0][0].size
 
-            print("Predicted: ",secondsToTime(arrival_time),"   Actual: ",secondsToTime(y_train[count]), end='')
-            if isAccurate(y_train[count], arrival_time, 60):
+            #print(predictions[1])
+            neighbour_dep_time_s = X_train.iloc[predictions[1][0][0]][0]
+            neighbour_delay_s = X_train.iloc[predictions[1][0][0]][1]
+            #print(neighbour_dep_time_s,neighbour_delay_s)
+
+            print("   PREDICTED ( %s):      dep_at=%s, delay=%s   ->  arrival:%s" %(y_train[predictions[1][0][0]][1], secondsToTime(neighbour_dep_time_s),neighbour_delay_s,secondsToTime(predicted_arrival)))
+            #print("    PREDICTED: dep_at=%s delay=%s   ->  arrival:%s" %(secondsToTime(neighbour_dep_time_s),neighbour_delay_s,secondsToTime(predicted_arrival)))
+            #print(y_test[count][0])
+            if isAccurate(y_test[count][0], predicted_arrival, 60):
                 numberAccurate = numberAccurate + 1
-                print(" ACC")
+                print('\033[92m' + " ACCURATE ")
             else:
-                print(" NOT ACC")
+                print('\033[91m'+ " NOT ACCURATE")
             count = count + 1
+            print('\033[0m', end='')
 
         accuracy = (numberAccurate / X_test.size) * 100
         print("ACCURACY: ","(",numberAccurate,"/",X_test.size,")  ->", accuracy)
+        results_writer.writerow([accuracy])
 
-    def version3():
+
+    def getData():
+        df = DatabaseQuerier().getSelectedTrains('NRCH', 'LIVST')
+        train, test = train_test_split(df, test_size=0.2, random_state=42)
+        return train, test
+
+
+    def getEstimatedArrivalTimeV1(travel_information):
+        # from, to, planned_dep_time, delay_mins
+
+        df = DatabaseQuerier().getAllTrains('NRCH', 'LIVST')
+
+
+        # Get time now as seconds since midnight
+        planned_depature_time = datetime.datetime.strptime(travel_information['planned_dep_time'],"%H:%M")
+        planned_depature_time_s = (planned_depature_time - planned_depature_time.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+        print("Planned Departure at: ",secondsToTime(planned_depature_time_s),"(",planned_depature_time_s,")")
+
+        delay = travel_information['delay_mins']*60
+        print("Delayed by: ",delay)
+
+        # Initialize final dataset to be used in classifier
+        classification_df = pandas.DataFrame(columns=["time_at_station_s", "current_delay_s", "rid", "arrival_time_s"])
+
+        count = 0
+        for row in df.iterrows():
+
+            # print(row)
+            # 1:2 planned dep, 1:3 actual dep, 1:5 planned arrival, 1:6 actual arrival
+
+            # Planned departure datetime
+
+            try:
+                planned_departure = datetime.datetime.strptime(row[1][0][0:8] + row[1][2], "%Y%m%d%H:%M:%S")
+            except ValueError:
+                planned_departure = datetime.datetime.strptime(row[1][0][0:8] + row[1][2], "%Y%m%d%H:%M")
+            planned_departure = planned_departure - planned_departure.replace(hour=0, minute=0, second=0, microsecond=0)
+            # print(planned_departure)
+
+            # Actual departure datetime
+            try:
+                actual_departure = datetime.datetime.strptime(row[1][0][0:8] + row[1][3], "%Y%m%d%H:%M:%S")
+            except ValueError:
+                actual_departure = datetime.datetime.strptime(row[1][0][0:8] + row[1][3], "%Y%m%d%H:%M")
+            actual_departure = actual_departure - actual_departure.replace(hour=0, minute=0, second=0, microsecond=0)
+            # print(actual_departure)
+
+            # Delay at departure station
+            departure_delay = actual_departure - planned_departure
+            # print(departure_delay)
+
+            # Actual arrival datetime
+            try:
+                actual_arrival = datetime.datetime.strptime(row[1][0][0:8] + row[1][6], "%Y%m%d%H:%M:%S")
+            except ValueError:
+                actual_arrival = datetime.datetime.strptime(row[1][0][0:8] + row[1][6], "%Y%m%d%H:%M")
+            actual_arrival = actual_arrival - actual_arrival.replace(hour=0, minute=0, second=0, microsecond=0)
+            # print(actual_arrival)
+
+            # print("rid:",row[1][0],"ptd:",planned_departure,"delay:",departure_delay,"arrival:",actual_arrival)
+            classification_df.loc[count] = [planned_departure.total_seconds(), departure_delay.total_seconds(),
+                                            row[1][0], actual_arrival.total_seconds()]
+            count = count + 1
+
+        X = classification_df.drop(['arrival_time_s', 'rid'], axis=1)  # Remove predicting value for X dataframe
+        y = classification_df[['arrival_time_s', 'rid']].values  # Seperate target predicting values into own dataframe
+
+        # Split data
+        #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=9)
+
+        neigh = NearestNeighbors(n_neighbors=1)
+        neigh.fit(X)
+
+        count = 0
+        predictions = neigh.kneighbors([[planned_depature_time_s, delay]])  # 0:distance 1:position of neighbour
+
+
+        predicted_arrival = y[predictions[1]][0][0][0]
+        return "You should arrive at "+secondsToTime(y[predictions[1]][0][0][0])
+
+
+    def getEstimatedArrivalTimeV2(_from, _to, delayed_by):
         # Pass all stations/stops with departure and arrival times
+        # create model for each station
+        #   inputs: dep_at, delay, day, month, peak/off-peak      Y: arr_at (other observed data)
+
+        df = DatabaseQuerier().getSelectedTrains('NRCH', 'LIVST')
+        train, test = train_test_split(df, test_size=0.2, random_state=42)
+
         print("TODO")
 
 
@@ -347,7 +306,8 @@ with open('tempResults.csv', mode='a') as results:
     ###############################################################
     ###################### Test Harness  ######################
     if __name__ == "__main__":
-        version2()
+        test = getEstimatedArrivalTimeV1({"planned_dep_time":"12:00","delay_mins":2})
+        print(test)
         # results_writer.writerow(["14neighbours 1-10000multiplier"])
         # for i in range(1000, 20000, 1000):
         #     version1(14, i)
