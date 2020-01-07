@@ -1,5 +1,6 @@
 import spacy
 import random
+import dateparser
 #from controller import controller
 
 nlp = spacy.load("en_core_web_sm") #Load language model object (sm is small version)
@@ -28,6 +29,25 @@ class ReasoningEngine:
 
     def get_random_response(self):
         return random.choice(self.RESPONSES)
+
+    # convert date to format needed for nationalrail (ddmmyy)
+    def convert_date(self, d):
+        # user dateparser to parse the date into a python datetime
+        parsed_date = dateparser.parse(d)
+
+        # format output string
+        date = parsed_date.strftime("%d%m%y")
+
+        return date
+
+    # convert time to format needed for nationalrail (hhmm 24)
+    def convert_time(self, t):
+        # user dateparser to parse the date into a python datetime
+        parsed_time = dateparser.parse(t)
+
+        time = parsed_time.strftime("%H%M")
+
+        return time
 
 
     trainInformation = (
@@ -236,11 +256,13 @@ class ReasoningEngine:
 
             # date entity found, add to dictionary
             if(ent.label_ is "DATE"):
-                dict.update({"date": ent.text}) 
+                formatted_date = self.convert_date(ent.text)
+                dict.update({"date": formatted_date}) 
 
             # date entity found, add to dictionary
             if(ent.label_ is "TIME"):
-                dict.update({"time": ent.text}) 
+                formatted_time = self.convert_time(ent.text)
+                dict.update({"time": formatted_time}) 
 
     # attempts to return delay info
     # FROM / TO / CURR_AT / DELAY_MINS
