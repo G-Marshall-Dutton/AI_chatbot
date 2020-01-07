@@ -98,7 +98,7 @@ sendMessage = () => {
             ticket.after(
                 `
                 <div class='button-row'>
-                    <a href = '`+ data.answer.pageUrl +`' class = 'btn bg-warning'> Book Now </a>
+                    <a href = '`+ data.answer.pageUrl + `' class = 'btn bg-warning' target='blank'> Book Now </a>
                 </div>
                 `
             )
