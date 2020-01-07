@@ -1,10 +1,11 @@
 import spacy
 import random
 import dateparser
+from decimal import *
 #from controller import controller
 
-nlp = spacy.load("en_core_web_sm") #Load language model object (sm is small version)
-#nlp = spacy.load("en_core_web_lg") #Load language model object 
+#nlp = spacy.load("en_core_web_sm") #Load language model object (sm is small version)
+nlp = spacy.load("en_core_web_lg") #Load language model object 
 
 #sentence with type
 class ClassifiedSentence:
@@ -118,14 +119,17 @@ class ReasoningEngine:
         for previous in ReasoningEngine.trainInformation:
             example = nlp(previous)
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
-            if cleaned_sentence.similarity(cleaned_previous) > best_score:
+            if cleaned_sentence.similarity(cleaned_previous) > best_score: 
                 best_score = cleaned_sentence.similarity(cleaned_previous)
+                print("SCORE BOOKING: ", Decimal(best_score))
               
         # determine if a DELAY type
         for previous in ReasoningEngine.delayInformation:
             example = nlp(previous)
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
             if cleaned_sentence.similarity(cleaned_previous) > best_score:
+                best_score = cleaned_sentence.similarity(cleaned_previous)
+                print("SCORE DELAY: ", Decimal(best_score))
                 typ = "delay"
 
         # determine if a CHAT type
@@ -133,12 +137,14 @@ class ReasoningEngine:
             example = nlp(previous)
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
             if cleaned_sentence.similarity(cleaned_previous) > best_score:
+                best_score = cleaned_sentence.similarity(cleaned_previous)
+                print("SCORE CHAT: ", Decimal(best_score))
                 typ = "chat"
 
         # TODO: better way of classifying intent?
 
         # 'chat' or 'query' for now
-        print(typ)
+        #print(typ)
         #return ClassifiedSentence(sentence,typ)
         return typ
 
@@ -282,7 +288,7 @@ class ReasoningEngine:
         for token in doc:
             
             # debug to display detected tokens
-            print("Token type is " + str(token.pos_) + " @ position " + str(position)) 
+            #print("Token type is " + str(token.pos_) + " @ position " + str(position)) 
             
             # if proper noun is detected
             if token.pos_ is 'PROPN':
