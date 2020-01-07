@@ -3,7 +3,7 @@ import random
 #from controller import controller
 
 nlp = spacy.load("en_core_web_sm") #Load language model object (sm is small version)
-#controller = controller.ConversationController()
+#nlp = spacy.load("en_core_web_lg") #Load language model object 
 
 #sentence with type
 class ClassifiedSentence:
@@ -220,11 +220,11 @@ class ReasoningEngine:
                 if(pnouns_pos[i] > 0):
 
                     # if previous word is "from", then must be source 
-                    if(token.nbor(-1).text == "from"):
+                    if(doc[pnouns_pos[i]].nbor(-1).text == "from"):
                         dict.update({"from": pnouns[i]})   # add to dict         
 
                     # if previous word is "to", then must be destination
-                    if(token.nbor(-1).text == "to"):
+                    if(doc[pnouns_pos[i]].nbor(-1).text == "to"):
                         dict.update({"to": pnouns[i]}) 
         # otherwise more than 2 pnouns found, so do nothing
         #else:
@@ -307,7 +307,7 @@ class ReasoningEngine:
 
 
         # otherwise if 3 pnouns found then determine to/from 
-        elif(len(pnouns) < 4):
+        elif(len(pnouns) < 4):            
 
             # loop through pnouns
             for i in range(len(pnouns)):
@@ -316,17 +316,17 @@ class ReasoningEngine:
                 if(pnouns_pos[i] > 0):
 
                     # if previous word is "from", then must be source 
-                    if(token.nbor(-1).text == "from"):
+                    if(doc[pnouns_pos[i]].nbor(-1).text == "from"):
                         dict.update({"from": pnouns[i]})   # add to dict         
                         print("from added")
 
                     # if previous word is "to", then must be destination
-                    if(token.nbor(-1).text == "to"):
+                    if(doc[pnouns_pos[i]].nbor(-1).text == "to"):
                         dict.update({"to": pnouns[i]}) 
                         print("to added")
                     
                     # if previous word is "at" or "is", then must be current station user is at
-                    if(token.nbor(-1).text == "at" or token.nbor(-1).text == "is"):
+                    if(doc[pnouns_pos[i]].nbor(-1).text == "at" or token.nbor(-1).text == "is"):
                         dict.update({"at": pnouns[i]}) 
                         print("at added")
 
