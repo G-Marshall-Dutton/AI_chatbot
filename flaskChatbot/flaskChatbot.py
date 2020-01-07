@@ -1,8 +1,11 @@
 from flask import Flask, render_template,request,make_response,jsonify
-from nlp import nlp
-from controller import controller
 import json
 from urllib.request import urlopen
+
+from webScraper import webScraper
+from nlp import nlp
+from controller import controller
+
 
 
 #Create flask shell
@@ -24,6 +27,7 @@ controller = controller.ConversationController(nlp)
 # Initial SplashScreen
 @app.route("/")
 def index():
+
     # get users location on index page
     url = 'http://ipinfo.io/json'
     response = urlopen(url)
@@ -53,7 +57,17 @@ def chat():
 
     # Pass the user input to the controller : respond deals with connection to NLP
     response = controller.respond(userInput)
-    response = make_response(jsonify({"answer": response}), 200)
+
+    # Determine if its a normal response or the scraped ticket info
+    # Normal response
+    if(isinstance(response, str )):
+        status = "ticketChat" 
+    # Ticket info (stored in a dict)
+    elif(isinstance(response, dict )):
+        status = "ticketInfo"
+
+
+    response = make_response(jsonify({"answer": response, "status" : status}), 200)
     return response
     
 
