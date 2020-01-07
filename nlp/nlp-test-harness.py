@@ -27,13 +27,13 @@ while(True):
     # get user input
     userInput = input("Input for NLP > ")
 
-    # # TEST CODE FOR RESPONSES
-    # # get journey info test
-    # nlp_response = re.get_journey_info(userInput, dict)
+    # TEST CODE FOR RESPONSES
+    # get journey info test
+    nlp_response = re.get_journey_info(userInput, dict)
 
-    # # print results of classifying
-    # print('get_journey_info returns:')
-    # print(dict)
+    # print results of classifying
+    print('get_journey_info returns:')
+    print(dict)
 
 
     # # TEST CODE FOR CLASSIFYING
@@ -51,10 +51,18 @@ while(True):
     # # print(nlp_affirm)
 
 
-    # TEST CODE FOR DELAY 
-    # get delay info test
-    nlp_response = re.get_delay_info(userInput, delay_dict)
+    # # TEST CODE FOR DELAY 
+    # # get delay info test
+    # nlp_response = re.get_delay_info(userInput, delay_dict)
 
-    # print results of classifying
-    print('get_delay_info returns:')
-    print(delay_dict)
+    # # print results of classifying
+    # print('get_delay_info returns:')
+    # print(delay_dict)
+
+    # # TEST CODE FOR CONVERT_DATE
+    # returned_date = re.convert_date(userInput)
+    # print(returned_date) 
+
+    # # TEST CODE FOR CONVERT_TIME
+    # returned_time = re.convert_time(userInput)
+    # print(returned_time) 
