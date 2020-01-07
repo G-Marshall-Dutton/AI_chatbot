@@ -265,7 +265,7 @@ class ReasoningEngine:
                 dict.update({"time": formatted_time}) 
 
     # attempts to return delay info
-    # FROM / TO / CURR_AT / DELAY_MINS
+    # FROM / TO / PLANNED_DEP_TIME / DELAY_MINS
     # TODO: controller will pass in a dict of what it knows, it is this functions job to try and identify information from the text, update the dictionary and return it
     def get_delay_info(self, text, dict):
         
@@ -302,19 +302,14 @@ class ReasoningEngine:
             print("Only 1 pnoun detected")
 
             # if only FROM is missing
-            if(dict.get("from") is None and dict.get("to") is not None and dict.get("at") is not None):
+            if(dict.get("from") is None and dict.get("to") is not None):
                 print("Adding a from ONLY")
                 dict.update({"from": pnouns[0]})
 
             # if only TO is missing
-            if(dict.get("from") is not None and dict.get("to") is None and dict.get("at") is not None):
+            if(dict.get("from") is not None and dict.get("to") is None):
                 print("Adding a to ONLY")
                 dict.update({"to": pnouns[0]}) 
-
-            # if only AT is missing
-            if(dict.get("from") is not None and dict.get("to") is not None and dict.get("at") is None):
-                print("Adding a at ONLY")
-                dict.update({"at": pnouns[0]}) 
 
             # if only one value is found, check not in first position, because can't look at backward neighbour
             if(pnouns_pos[0] > 0):
@@ -328,8 +323,8 @@ class ReasoningEngine:
                     dict.update({"to": pnouns[0]}) 
 
 
-        # otherwise if 3 pnouns found then determine to/from 
-        elif(len(pnouns) < 4):            
+        # otherwise if 2 pnouns found then determine to/from 
+        elif(len(pnouns) < 3):            
 
             # loop through pnouns
             for i in range(len(pnouns)):
@@ -346,16 +341,20 @@ class ReasoningEngine:
                     if(doc[pnouns_pos[i]].nbor(-1).text == "to"):
                         dict.update({"to": pnouns[i]}) 
                         print("to added")
-                    
-                    # if previous word is "at" or "is", then must be current station user is at
-                    if(doc[pnouns_pos[i]].nbor(-1).text == "at" or token.nbor(-1).text == "is"):
-                        dict.update({"at": pnouns[i]}) 
-                        print("at added")
-
+                   
 
         # otherwise more than 2 pnouns found, so do nothing
         #else:
             #print("No proper nouns found")
+
+        # iterate through entities, looking for time entity
+        for token in doc: 
+
+            # date entity found, add to dictionary
+            if(token.pos_ is "TIME"):
+                converted_time = self.convert_time(token.text)
+                dict.update({"planned_dep_time": converted_time}) 
+
 
         # iterate through entities, looking for current delay
         for token in doc: 
