@@ -354,17 +354,20 @@ class ReasoningEngine:
             #print("No proper nouns found")
 
         # iterate through entities, looking for time entity
-        for token in doc: 
+        if(dict.get("planned_dep_time") is None):
+            
+            for ent in doc.ents: 
 
-            # date entity found, add to dictionary
-            if(token.pos_ is "TIME"):
-                converted_time = self.convert_time(token.text)
-                dict.update({"planned_dep_time": converted_time}) 
+                # date entity found, add to dictionary
+                if(ent.label_ is "TIME"):
+                    print("FOUND A TIME")
+                    converted_time = self.convert_time(ent.text)
+                    dict.update({"planned_dep_time": converted_time}) 
 
+        else:
+            # iterate through entities, looking for current delay
+            for token in doc: 
 
-        # iterate through entities, looking for current delay
-        for token in doc: 
-
-            # date entity found, add to dictionary
-            if(token.pos_ is "NUM"):
-                dict.update({"delay_mins": token.text}) 
+                # date entity found, add to dictionary
+                if(token.pos_ is "NUM"):
+                    dict.update({"delay_mins": token.text}) 
