@@ -17,35 +17,128 @@ sendMessage = () => {
     console.log("PaPa's new friend: "+userMessage)
     document.getElementById('userInput').value = "" //Empy input
 
-
+    // Display user message
     if(userMessage != ""){
-           // Write user message bubble
+        // Write user message bubble
         lastMessage.after(
             "<div class='response message-right '>  <p class='bg-success'> "+userMessage+" </p>  </div>"
         );
         updateScroll();
-        //Fetch request
-        fetch('/chat',{
-            method: 'POST',
-            body: JSON.stringify({ userMessage: userMessage }), // Provide user query message
-            headers: {
-            'Content-Type': 'application/json',
-            }
-        }).then((response) => {
-            return response.json(); //Parse as JSON
-        }).then((data) => {
-            console.log("PaPa: "+data.answer)
-            // Find last message again 
+
+        // Display chat bot message
+        $.ajax({
+
+            url: "/chat",
+            type: 'POST',
+            data: JSON.stringify({ userMessage: userMessage }),
+            contentType: 'application/json',
+            success: function(data){
+            console.log(data)
             lastMessage = $(".response:last-of-type")
 
-            // Write PaPa message bubble
-            lastMessage.after(
-                "<div class='response message-left '>  <p class='bg-primary'> "+data.answer+" </p>  </div>"
-            );
+
+            if(data.status == "ticketChat"){
+                // Write PaPa message bubble
+                lastMessage.after(
+                    "<div class='response message-left '>  <p class='bg-primary'> "+data.answer+" </p>  </div>"
+                );
+            }
+            else{
+                // Display scraped ticket info as a ticket
+                lastMessage.after(
+                    `<div class='ticket'> 
+                        <div class='textArea'>
+
+                            <div class='headings'>
+                                <p> Class </p>
+                                <p> Ticket type </p>
+                                <p> Adult </p>
+                                <p> Child </p>
+                            </div>
+                            <div class='info'>
+                                <p> STD </p>
+                                <p class="sml-text">`+ data.answer.ticketType + `</p>
+                                <p> `+ data.answer.numberOfTickets +` </p>
+                                <p> 0 </p>
+                            </div>
+
+                            <div class='headings'>
+                            </div>
+                            <div class='info'>
+                            </div>
+
+                            <div class='headings'>
+                                <p> From </p>
+                                <p> Leaving at </p>
+                                <p> Route name </p>
+                            </div>
+                            <div class='info'>
+                                <p>`+ data.answer.fromStation +`</p>
+                                <p>`+ data.answer.departureTime +`</p>
+                                <p class="sml-text"> `+ data.answer.fareRouteName +` </p>
+                            </div>
+
+                            <div class='headings'>
+                                <p> To </p>
+                                <p> Arriving at </p>
+                                <p> Price </p>
+                            </div>
+                            <div class='info'>
+                                <p>`+ data.answer.toStation +`</p>
+                                <p>`+ data.answer.arrivalTime +`</p>
+                                <p> `+ data.answer.price +` </p>
+                            </div>
+                        </div> 
+                    </div>`
+           
+                );
+            }
+
+            var ticket =  $(".ticket")
+            ticket.after(
+                `
+                <div class='button-row'>
+                    <a href = '`+ data.answer.pageUrl +`' class = 'btn bg-warning'> Book Now </a>
+                </div>
+                `
+            )
+
             updateScroll();
-        }).catch(() => {
-            console.log("Could not recieve response from PaPa :(");
-        });
+
+            }
+
+
+
+        })
+
+
+
+
+
+        //Fetch request
+        // fetch('/chat',{
+        //     method: 'POST',
+        //     body: JSON.stringify({ userMessage: userMessage }), // Provide user query message
+        //     headers: {
+        //     'Content-Type': 'application/json',
+        //     }
+        // }).then((response) => {
+        //     var info = response.json()
+        //     console.log(info.answer)
+        //     return info //Parse as JSON
+        // }).then((data) => {
+        //     console.log("PaPa: "+data.answer)
+        //     // Find last message again 
+        //     lastMessage = $(".response:last-of-type")
+
+        //     // Write PaPa message bubble
+        //     lastMessage.after(
+        //         "<div class='response message-left '>  <p class='bg-primary'> "+data.answer+" </p>  </div>"
+        //     );
+        //     updateScroll();
+        // }).catch(() => {
+        //     console.log("Could not recieve response from PaPa :(");
+        // });
 
     }
 
