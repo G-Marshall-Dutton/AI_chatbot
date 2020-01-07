@@ -136,10 +136,80 @@ class DatabaseQuerier:
                 WHERE tpl = 'LIVST'
                 AND arr_at IS NOT NULL
                 ) AS y on x.rid = y.rid_to
-                ORDER BY rid
-                LIMIT 20
+                ORDER BY rid#
+                
             """.format(past_journeys,f,t)
         
+        # Execute query and get results
+        return sqlio.read_sql_query(query, self.connection)
+
+    def getSelectedTrains(self, f, t):
+        import pandas.io.sql as sqlio
+        # Open Connection
+        self.openConnection()
+
+        query = """
+            SELECT rid,tpl,ptd,dep_at,tpl_to,pta,arr_at FROM
+                (SELECT rid,tpl,ptd,dep_at FROM nrch_livst_a51 
+                WHERE tpl = '{1}'
+                AND dep_at IS NOT NULL
+                ) AS x
+                JOIN
+                (SELECT rid AS rid_to,tpl AS tpl_to,pta,arr_at FROM nrch_livst_a51 
+                WHERE tpl = '{2}'
+                AND arr_at IS NOT NULL
+                ) AS y on x.rid = y.rid_to
+            ORDER BY rid
+            """.format(past_journeys, f, t)
+
+        # Execute query and get results
+        return sqlio.read_sql_query(query, self.connection)
+
+    def getDelayedTrains(self, f, t):
+        import pandas.io.sql as sqlio
+        # Open Connection
+        self.openConnection()
+
+        query = """
+            SELECT rid,tpl,ptd,dep_at,tpl_to,pta,arr_at FROM
+                (SELECT rid,tpl,ptd,dep_at FROM nrch_livst_a51 
+                WHERE tpl = '{1}'
+                AND dep_at IS NOT NULL
+                ) AS x
+                JOIN
+                (SELECT rid AS rid_to,tpl AS tpl_to,pta,arr_at FROM nrch_livst_a51 
+                WHERE tpl = '{2}'
+                AND arr_at IS NOT NULL
+                ) AS y on x.rid = y.rid_to
+            WHERE ptd < dep_at
+            ORDER BY rid
+            """.format(past_journeys, f, t)
+
+        # Execute query and get results
+        return sqlio.read_sql_query(query, self.connection)
+
+    def getAllTrains(self, f, t):
+        import pandas.io.sql as sqlio
+        # Open Connection
+        self.openConnection()
+
+        query = """
+            SELECT rid,tpl,ptd,dep_at,tpl_to,pta,arr_at FROM
+                (SELECT rid,tpl,ptd,dep_at FROM nrch_livst_a51 
+                WHERE tpl = '{1}'
+                AND dep_at IS NOT NULL
+                AND ptd IS NOT NULL
+                ) AS x
+                JOIN
+                (SELECT rid AS rid_to,tpl AS tpl_to,pta,arr_at FROM nrch_livst_a51 
+                WHERE tpl = '{2}'
+                AND arr_at IS NOT NULL
+                AND pta IS NOT NULL
+                ) AS y on x.rid = y.rid_to
+            ORDER BY rid
+            LIMIT 200
+            """.format(past_journeys, f, t)
+
         # Execute query and get results
         return sqlio.read_sql_query(query, self.connection)
 

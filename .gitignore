@@ -4,6 +4,6 @@ vscode/
 app/__pycache__/__init__.cpython-36.pyc
 .vscode/
 
-.idea/
-
 venv/
+
+.idea/
