@@ -51,15 +51,41 @@ import datetime
 # Get day as integer as string
 def dayIndexToString(index):
     switcher = {
-        0: "mon",
-        1: "tues",
-        2: "weds",
-        3: "thurs",
-        4: "fri",
-        5: "sat",
-        6: "sun",
+        0: "Mon",
+        1: "Tues",
+        2: "Weds",
+        3: "Thurs",
+        4: "Fri",
+        5: "Sat",
+        6: "Sun",
     }
-    return switcher.get(index, "Invalid day")
+    return switcher.get(index, "Invalid index")
+
+# Get day as integer as string
+def monthIndexToString(index):
+    switcher = {
+        0: "Jan",
+        1: "Feb",
+        2: "March",
+        3: "April",
+        4: "May",
+        5: "June",
+        6: "July",
+        7: "Aug",
+        8: "Sept",
+        9: "Oct",
+        10: "Nov",
+        11: "Dec",
+    }
+    return switcher.get(index, "Invalid index")
+
+# Get day as integer as string
+def peakIndexToString(index):
+    switcher = {
+        0: "Off-Peak",
+        1: "Peak",
+    }
+    return switcher.get(index, "Invalid index")
 
 # Get datetime from seconds
 def secondsToTime(seconds):

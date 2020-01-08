@@ -144,14 +144,14 @@ class DatabaseQuerier:
             limit = "LIMIT "+str(limit)
 
         query = """
-            SELECT rid,tpl,ptd,dep_at,tpl_to,pta,arr_at FROM
-                (SELECT rid,tpl,ptd,dep_at FROM nrch_livst_a51 
+            SELECT rid,tpl,ptd,dep_at,tpl_to,pta,arr_at,monthnum,dayofweek,peak FROM
+                (SELECT rid,tpl,ptd,dep_at,monthnum,dayofweek,peak FROM features_1
                 WHERE tpl = '{1}'
                 AND dep_at IS NOT NULL
                 AND ptd IS NOT NULL
                 ) AS x
                 JOIN
-                (SELECT rid AS rid_to,tpl AS tpl_to,pta,arr_at FROM nrch_livst_a51 
+                (SELECT rid AS rid_to,tpl AS tpl_to,pta,arr_at FROM features_1
                 WHERE tpl = '{2}'
                 AND arr_at IS NOT NULL
                 AND pta IS NOT NULL
@@ -190,4 +190,6 @@ class DatabaseQuerier:
 # TEST HARNESS
 if __name__ == '__main__':
     dl = DatabaseQuerier()
+    aa = dl.getAllTrains("NRCH","DISS",100)
+    print("DONE")
 
