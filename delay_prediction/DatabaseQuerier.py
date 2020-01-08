@@ -1,24 +1,10 @@
 import psycopg2
-import pprint
 import pandas.io.sql as sqlio
 
-# Test Variables
-past_journeys = 'nrch_livst_a51'
+# tables
+norwich_to_london = 'nrch_livst_a51'
+norwich_to_london_additional = None # find table name
 stations = 'stations'
-test_rid = 201810247681166
-
-# Globals
-pp = pprint.PrettyPrinter(indent=4)
-
-# Print without python container syntax (rows)
-def printAsRows(list):
-    for item in list:
-        print(item)
-
-# Print each item's attribute on a new line
-def prettyPrint(list):
-    pp.pprint(list)
-
 
 ###############################################
 ############  Fields Reference  ############
@@ -65,15 +51,16 @@ def prettyPrint(list):
 ###############################################
 
 
-
+################################################################################################
 class DatabaseQuerier:
+    # Class for accessing tables from the database
     
     def __init__(self):
         self.connection = None
         self.cursor = None
 
     ###########################################################
-    ################# Database Connection ##################
+    ################# Database Connections ##################
 
     def openConnection(self):
         try:
@@ -104,6 +91,7 @@ class DatabaseQuerier:
     ############################################################
     ########### Query Functions ############################
 
+    # Get all rows for journey with given rid
     def getTrainJourneyGivenRID(self,rid):
         # Open Connection
         self.openConnection()
@@ -111,7 +99,7 @@ class DatabaseQuerier:
         query = """
             SELECT * FROM {0} 
             WHERE rid = '{1}'
-            """.format(past_journeys,test_rid)
+            """.format(norwich_to_london,rid)
         
         # Execute query and get results
         self.cursor.execute(query)
@@ -121,51 +109,7 @@ class DatabaseQuerier:
         self.closeConnection()
         return records
 
-    def testReturnDataframe(self,f,t):
-
-        # Open Connection
-        self.openConnection()
-
-        query = """
-            SELECT rid,tpl,arr_at,tpl_to,dep_at FROM
-                (SELECT rid,tpl,dep_at FROM nrch_livst_a51 
-                WHERE tpl = 'NRCH'
-                AND dep_at IS NOT NULL
-                ) AS x
-                JOIN
-                (SELECT rid AS rid_to,tpl AS tpl_to,arr_at FROM nrch_livst_a51 
-                WHERE tpl = 'LIVST'
-                AND arr_at IS NOT NULL
-                ) AS y on x.rid = y.rid_to
-                ORDER BY rid#
-                
-            """.format(past_journeys,f,t)
-        
-        # Execute query and get results
-        return sqlio.read_sql_query(query, self.connection)
-
-    def getSelectedTrains(self, f, t):
-
-        # Open Connection
-        self.openConnection()
-
-        query = """
-            SELECT rid,tpl,ptd,dep_at,tpl_to,pta,arr_at FROM
-                (SELECT rid,tpl,ptd,dep_at FROM nrch_livst_a51 
-                WHERE tpl = '{1}'
-                AND dep_at IS NOT NULL
-                ) AS x
-                JOIN
-                (SELECT rid AS rid_to,tpl AS tpl_to,pta,arr_at FROM nrch_livst_a51 
-                WHERE tpl = '{2}'
-                AND arr_at IS NOT NULL
-                ) AS y on x.rid = y.rid_to
-            ORDER BY rid
-            """.format(past_journeys, f, t)
-
-        # Execute query and get results
-        return sqlio.read_sql_query(query, self.connection)
-
+    # Get all journeys as a row with predicted and actual times from station f to station t where it was late to depart
     def getDelayedTrains(self, f, t):
  
         # Open Connection
@@ -184,15 +128,20 @@ class DatabaseQuerier:
                 ) AS y on x.rid = y.rid_to
             WHERE ptd < dep_at
             ORDER BY rid
-            """.format(past_journeys, f, t)
+            """.format(norwich_to_london, f, t)
 
         # Execute query and get results
         return sqlio.read_sql_query(query, self.connection)
 
-    def getAllTrains(self, f, t):
-       
+    # Get all journeys as a row with predicted and actual times from station f to station t
+    def getAllTrains(self, f, t, limit):
         # Open Connection
         self.openConnection()
+
+        if limit is None:
+            limit = ""
+        else:
+            limit = "LIMIT "+str(limit)
 
         query = """
             SELECT rid,tpl,ptd,dep_at,tpl_to,pta,arr_at FROM
@@ -207,29 +156,14 @@ class DatabaseQuerier:
                 AND arr_at IS NOT NULL
                 AND pta IS NOT NULL
                 ) AS y on x.rid = y.rid_to
-            ORDER BY rid
-            """.format(past_journeys, f, t)
+            ORDER BY rid """.format(norwich_to_london, f, t)+limit
+
 
         # Execute query and get results
         return sqlio.read_sql_query(query, self.connection)
 
-    def getAllPreviousJourneyRIDs(self):
-        # Open Connection
-        self.openConnection()
 
-        query = """
-            SELECT DISTINCT rid FROM {0}
-            LIMIT 20
-            """.format(past_journeys)
-      
-          # Execute query and get results
-        self.cursor.execute(query)
-        records = self.cursor.fetchall()
-
-        # Close connection
-        self.closeConnection()
-        return records
-
+    # Get all known stations (Also in stations.csv)
     def getAllStations(self):
         # Open Connection
         self.openConnection()
@@ -246,27 +180,14 @@ class DatabaseQuerier:
         self.closeConnection()
         return records
 
-    def getAllData(self, limit):
-            # Open Connection
-        self.openConnection()
-
-        query = """
-            SELECT * FROM {0} LIMIT {1}
-            """.format(past_journeys,limit)
-        
-        # Execute query and get results
-        self.cursor.execute(query)
-        records = self.cursor.fetchall()
-
-        # Close connection
-        self.closeConnection()
-        return records
 
     #######################################################
     ############################################################
+
+############################################################
+########################################################################
     
 # TEST HARNESS
 if __name__ == '__main__':
     dl = DatabaseQuerier()
-    prettyPrint(dl.getTrainJourneyGivenRID(test_rid))
 
