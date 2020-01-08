@@ -1,10 +1,10 @@
-import psycopg2
+import psycopg2  
 from sklearn.neighbors import NearestNeighbors
 import datetime
 ### FOR TESTING
 import sys
 sys.path.insert(1, 'C:\\Users\\jezba\\Documents\\AI_chatbot\\delay_prediction')
-from DatabaseQuerier import DatabaseQuerier
+from delay_prediction import DatabaseQuerier
 from sklearn.neighbors import NearestNeighbors
 import pandas
 from sklearn.model_selection import train_test_split
@@ -205,16 +205,16 @@ with open('tempResults.csv', mode='a') as results:
 
     def getEstimatedArrivalTimeV1(travel_information):
         # from, to, planned_dep_time, delay_mins
-
-        df = DatabaseQuerier().getAllTrains('NRCH', 'LIVST')
+        dq = DatabaseQuerier.DatabaseQuerier()
+        df = dq.getAllTrains('NRCH', 'LIVST')
 
 
         # Get time now as seconds since midnight
-        planned_depature_time = datetime.datetime.strptime(travel_information['planned_dep_time'],"%H:%M")
+        planned_depature_time = datetime.datetime.strptime(travel_information['planned_dep_time'],"%H%M")
         planned_depature_time_s = (planned_depature_time - planned_depature_time.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
         print("Planned Departure at: ",secondsToTime(planned_depature_time_s),"(",planned_depature_time_s,")")
 
-        delay = travel_information['delay_mins']*60
+        delay = int(travel_information['delay_mins'])*60
         print("Delayed by: ",delay)
 
         # Initialize final dataset to be used in classifier

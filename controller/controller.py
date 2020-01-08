@@ -1,9 +1,11 @@
 from webScraper import webScraper
+from delay_prediction import delays
 
 class ConversationController():
     def __init__(self, nlp):
 
         self.scraper = webScraper.webScraper()
+
 
         # Chat : Booking : Delay 
         self.nlp = nlp
@@ -122,8 +124,12 @@ class ConversationController():
             # Reset context
             self.context = None
 
+            # DELETE THIS WHEN INFO IS BEING CONVERTED PROPERLY TO STATION CODES
+            self.delay_state['to'] = 'LIVST'
+            self.delay_state['from'] = 'NRCH'
+
             # Predict delay
-            response = "There may... or may not be a delay"
+            response = delays.getEstimatedArrivalTimeV1(self.delay_state)
             return response
 
         # If delay_state is not full
