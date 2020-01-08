@@ -1,5 +1,6 @@
 import psycopg2
 import pprint
+import pandas.io.sql as sqlio
 
 # Test Variables
 past_journeys = 'nrch_livst_a51'
@@ -121,7 +122,7 @@ class DatabaseQuerier:
         return records
 
     def testReturnDataframe(self,f,t):
-        import pandas.io.sql as sqlio
+
         # Open Connection
         self.openConnection()
 
@@ -144,7 +145,7 @@ class DatabaseQuerier:
         return sqlio.read_sql_query(query, self.connection)
 
     def getSelectedTrains(self, f, t):
-        import pandas.io.sql as sqlio
+
         # Open Connection
         self.openConnection()
 
@@ -166,7 +167,7 @@ class DatabaseQuerier:
         return sqlio.read_sql_query(query, self.connection)
 
     def getDelayedTrains(self, f, t):
-        import pandas.io.sql as sqlio
+ 
         # Open Connection
         self.openConnection()
 
@@ -189,7 +190,7 @@ class DatabaseQuerier:
         return sqlio.read_sql_query(query, self.connection)
 
     def getAllTrains(self, f, t):
-        import pandas.io.sql as sqlio
+       
         # Open Connection
         self.openConnection()
 
@@ -207,7 +208,6 @@ class DatabaseQuerier:
                 AND pta IS NOT NULL
                 ) AS y on x.rid = y.rid_to
             ORDER BY rid
-            LIMIT 200
             """.format(past_journeys, f, t)
 
         # Execute query and get results
