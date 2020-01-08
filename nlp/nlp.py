@@ -2,6 +2,7 @@ import spacy
 import random
 import dateparser
 from decimal import *
+from delay_prediction import StationFinder
 #from controller import controller
 
 #nlp = spacy.load("en_core_web_sm") #Load language model object (sm is small version)
@@ -18,6 +19,8 @@ class ClassifiedSentence:
 
 
 class ReasoningEngine:
+
+    stationFinder = StationFinder.StationFinder()
 
     def __init__(self):
         # Sentences we'll respond with if the user greeted us
@@ -217,23 +220,23 @@ class ReasoningEngine:
             # if only FROM is missing
             if(dict.get("from") is None and dict.get("to") is not None):
                 print("Adding a from ONLY")
-                dict.update({"from": pnouns[0]})
-
+                dict.update({"from": self.stationFinder.getCode(pnouns[0])})
+                
             # if only TO is missing
             if(dict.get("from") is not None and dict.get("to") is None):
                 print("Adding a to ONLY")
-                dict.update({"to": pnouns[0]}) 
+                dict.update({"to": self.stationFinder.getCode(pnouns[0])}) 
 
             # if only one value is found, check not in first position, because can't look at backward neighbour
             if(pnouns_pos[0] > 0):
 
                 # if previous word is "from", then must be source 
                 if(token.nbor(-1).text == "from"):
-                    dict.update({"from": pnouns[0]})   # add to dict         
+                    dict.update({"from": self.stationFinder.getCode(pnouns[0])})   # add to dict         
 
                 # if previous word is "to", then must be destination
                 if(token.nbor(-1).text == "to"):
-                    dict.update({"to": pnouns[0]}) 
+                    dict.update({"to": self.stationFinder.getCode(pnouns[0])}) 
 
 
         # otherwise if 2 pnouns found then determine to/from 
@@ -247,11 +250,11 @@ class ReasoningEngine:
 
                     # if previous word is "from", then must be source 
                     if(doc[pnouns_pos[i]].nbor(-1).text == "from"):
-                        dict.update({"from": pnouns[i]})   # add to dict         
+                        dict.update({"from": self.stationFinder.getCode(pnouns[i])})   # add to dict         
 
                     # if previous word is "to", then must be destination
                     if(doc[pnouns_pos[i]].nbor(-1).text == "to"):
-                        dict.update({"to": pnouns[i]}) 
+                        dict.update({"to": self.stationFinder.getCode(pnouns[i])}) 
         # otherwise more than 2 pnouns found, so do nothing
         #else:
             #print("No proper nouns found")
@@ -310,23 +313,23 @@ class ReasoningEngine:
             # if only FROM is missing
             if(dict.get("from") is None and dict.get("to") is not None):
                 print("Adding a from ONLY")
-                dict.update({"from": pnouns[0]})
+                dict.update({"from": self.stationFinder.getCode(pnouns[0])})
 
             # if only TO is missing
             if(dict.get("from") is not None and dict.get("to") is None):
                 print("Adding a to ONLY")
-                dict.update({"to": pnouns[0]}) 
+                dict.update({"to": self.stationFinder.getCode(pnouns[0])}) 
 
             # if only one value is found, check not in first position, because can't look at backward neighbour
             if(pnouns_pos[0] > 0):
 
                 # if previous word is "from", then must be source 
                 if(token.nbor(-1).text == "from"):
-                    dict.update({"from": pnouns[0]})   # add to dict         
+                    dict.update({"from": self.stationFinder.getCode(pnouns[0])})   # add to dict         
 
                 # if previous word is "to", then must be destination
                 if(token.nbor(-1).text == "to"):
-                    dict.update({"to": pnouns[0]}) 
+                    dict.update({"to": self.stationFinder.getCode(pnouns[0])}) 
 
 
         # otherwise if 2 pnouns found then determine to/from 
@@ -340,12 +343,12 @@ class ReasoningEngine:
 
                     # if previous word is "from", then must be source 
                     if(doc[pnouns_pos[i]].nbor(-1).text == "from"):
-                        dict.update({"from": pnouns[i]})   # add to dict         
+                        dict.update({"from": self.stationFinder.getCode(pnouns[i])})   # add to dict         
                         print("from added")
 
                     # if previous word is "to", then must be destination
                     if(doc[pnouns_pos[i]].nbor(-1).text == "to"):
-                        dict.update({"to": pnouns[i]}) 
+                        dict.update({"to": self.stationFinder.getCode(pnouns[i])}) 
                         print("to added")
                    
 
