@@ -64,18 +64,18 @@ def dayIndexToString(index):
 # Get day as integer as string
 def monthIndexToString(index):
     switcher = {
-        0: "Jan",
-        1: "Feb",
-        2: "March",
-        3: "April",
-        4: "May",
-        5: "June",
-        6: "July",
-        7: "Aug",
-        8: "Sept",
-        9: "Oct",
-        10: "Nov",
-        11: "Dec",
+        1: "Jan",
+        2: "Feb",
+        3: "March",
+        4: "April",
+        5: "May",
+        6: "June",
+        7: "July",
+        8: "Aug",
+        9: "Sept",
+        10: "Oct",
+        11: "Nov",
+        12: "Dec",
     }
     return switcher.get(index, "Invalid index")
 
@@ -86,6 +86,15 @@ def peakIndexToString(index):
         1: "Peak",
     }
     return switcher.get(index, "Invalid index")
+
+def isPeak(time_seconds):
+    morn_peak_start = 23400 #06:30
+    morn_peak_end = 34200 #09:30
+    eve_peak_start = 57600 #16:00
+    eve_peak_end = 68400 #19:00
+    if (time_seconds > morn_peak_start and time_seconds < morn_peak_end) or (time_seconds > eve_peak_start and time_seconds < eve_peak_end):
+        return 1
+    return 0
 
 # Get datetime from seconds
 def secondsToTime(seconds):

@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 
 from delay_prediction.delays import secondsToTime
 from delay_prediction.delays import isAccurate
+from delay_prediction.delays import isPeak
 
 
 class KNN_Classifier:
@@ -19,7 +20,6 @@ class KNN_Classifier:
 
     def buildClassifier(self, train):
         # Build classifier from training data
-        print("Building Classifier for route...",end='')
         # Initialize final dataset to be used in classifier
         self.classification_data = pandas.DataFrame(
             columns=["time_at_station_s", "current_delay_s", "month", "day", "peak", "arrival_time_s"])
@@ -74,7 +74,8 @@ class KNN_Classifier:
             self.classification_data.loc[count] = [planned_departure.total_seconds(), departure_delay.total_seconds(), month, day, peak, actual_arrival.total_seconds()]
             # print(self.classification_data.loc[count])
             count = count + 1
-        print(" COMPLETE")
+        #export_csv_test = self.classification_data.to_csv(r'combined.csv', index=None,
+        #                            header=True)  # Don't forget to add '.csv' at the end of the path
 
     def classifyInstance(self, features):
         # Classify an set of features return the predicted output
@@ -84,22 +85,26 @@ class KNN_Classifier:
         planned_depature_time = datetime.datetime.strptime(features['planned_dep_time'], "%H%M")
         planned_depature_time_s = (planned_depature_time - planned_depature_time.replace(hour=0, minute=0, second=0,
                                                                                          microsecond=0)).total_seconds()
-        print("User planned departure at: ", secondsToTime(planned_depature_time_s), "(", planned_depature_time_s, ")")
-
+        datetime_now = datetime.datetime.now()
+        month = datetime_now.month
+        day = datetime_now.weekday()
+        peak = isPeak(planned_depature_time_s)
+        print("\033[0mUser planned departure at: \033[94m", secondsToTime(planned_depature_time_s), "\033[0m(\033[94m", planned_depature_time_s, "\033[0m)")
+        print("\033[0mMonth:\033[94m",monthIndexToString(month),"\033[0m  Day:\033[94m",dayIndexToString(day), "    \033[94m", peakIndexToString(peak))
         delay = int(features['delay_mins']) * 60
-        print("User delayed by: ", delay)
+        print("\033[0mUser delayed by: \033[94m", delay,'\033[0m')
 
-        X = self.classification_data.drop(['arrival_time_s', 'rid'], axis=1)  # Remove predicting value for X dataframe
-        y = self.classification_data[['arrival_time_s', 'rid']].values  # Seperate target predicting values into own dataframe
+        X = self.classification_data.drop(['arrival_time_s'], axis=1)  # Remove predicting value for X dataframe
+        y = self.classification_data[['arrival_time_s']].values  # Seperate target predicting values into own dataframe
 
         self.classifier.fit(X)
 
-        predictions = self.classifier.kneighbors([[planned_depature_time_s, delay]])  # 0:distance 1:position of neighbour
+        predictions = self.classifier.kneighbors([[planned_depature_time_s, delay, month, day, peak]])  # 0:distance 1:position of neighbour
         predicted_arrival = y[predictions[1]][0][0][0]
 
         return "You should arrive at " + secondsToTime(predicted_arrival)
 
-    def testClassifier(self, num_datapoints):
+    def testClassifier(self):
         # Return the % accuracy given a train and test set (writes result to results file)
         with open('results.csv', mode='a') as results:
             results_writer = csv.writer(results, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -116,6 +121,12 @@ class KNN_Classifier:
 
             count = 0
             numberAccurate = 0
+
+            # export_csv_train = X_train.to_csv(r'train.csv', index=None,
+            #                        header=True)  # Don't forget to add '.csv' at the end of the path
+            # export_csv_test = X_test.to_csv(r'test.csv', index=None,
+            #                             header=True)  # Don't forget to add '.csv' at the end of the path
+
             for row in X_test.iterrows():
                 #print(count)
                 time_at_station_s = row[1][0]
@@ -124,9 +135,9 @@ class KNN_Classifier:
                 day = row[1][3]
                 peak = row[1][4]
 
-                # print("TEST %d :      dep_at=%s, delay=%s, %s, %s, %s    ->  arrival:%s" % (
-                #     count, secondsToTime(time_at_station_s), current_delay_s, monthIndexToString(month),dayIndexToString(day), peakIndexToString(peak),
-                #     secondsToTime(y_test[count][0])))
+                print("TEST %d :      dep_at=%s(%s), delay=%s, %s, %s, %s    ->  arrival:%s" % (
+                    count, secondsToTime(time_at_station_s),time_at_station_s, current_delay_s, monthIndexToString(month),dayIndexToString(day), peakIndexToString(peak),
+                    secondsToTime(y_test[count][0])))
 
                 # Input (Test)
                 predictions = testClassifier.kneighbors(
@@ -143,21 +154,21 @@ class KNN_Classifier:
                 neighbour_peak = X_train.iloc[predictions[1][0][0]][4]
                 # print(neighbour_dep_time_s,neighbour_delay_s)
 
-                #print(" PREDICTED :   dep_at=%s, delay=%s, %s, %s, %s   ->  arrival:%s" % (
-                     #secondsToTime(neighbour_dep_time_s), neighbour_delay_s, monthIndexToString(neighbour_month),dayIndexToString(neighbour_day), peakIndexToString(neighbour_peak),
-                    #secondsToTime(predicted_arrival)))
+                print(" PREDICTED :   dep_at=%s(%s), delay=%s, %s, %s, %s   ->  arrival:%s" % (
+                     secondsToTime(neighbour_dep_time_s), neighbour_dep_time_s, neighbour_delay_s, monthIndexToString(neighbour_month),dayIndexToString(neighbour_day), peakIndexToString(neighbour_peak),
+                    secondsToTime(predicted_arrival)))
                 # print(y_test[count][0])
                 if isAccurate(y_test[count][0], predicted_arrival, 60):
                     numberAccurate = numberAccurate + 1
-                    #print('\033[92m' + " ACCURATE ")
-                # else:
-                #     print('\033[91m' + " NOT ACCURATE")
+                    print('\033[92m' + " ACCURATE ")
+                else:
+                    print('\033[91m' + " NOT ACCURATE")
                 count = count + 1
-                #print('\033[0m', end='')
+                print('\033[0m', end='')
 
             accuracy = (numberAccurate / count) * 100
-            #print("ACCURACY: ", "(", numberAccurate, "/", count, ")  ->", accuracy)
-            results_writer.writerow([num_datapoints,accuracy])
+            print("ACCURACY: ", "(", numberAccurate, "/", count, ")  ->", accuracy)
+            results_writer.writerow([accuracy])
 
 if __name__ == "__main__":
 
@@ -165,19 +176,23 @@ if __name__ == "__main__":
     classifier = KNN_Classifier()
 
 
-    print("BUILDING CLASSIFIER COMPLETE")
+    print("BUILDING CLASSIFIER...",end='')
+    classifier.buildClassifier(dq.getAllTrains("NRCH", "DISS",None))
+    print("COMPLETE")
+    #print("TESTING CLASSIFIER...",end='')
+    #classifier.testClassifier()
+    #print("COMPLETE")
+    # for i in range(10,3001,10):
+    #     classifier.buildClassifier(dq.getAllTrains("NRCH", "DISS", i))
+    #     classifier.testClassifier(i)
+    #
+    # for i in range(10,3001,10):
+    #     classifier.buildClassifier(dq.getAllTrains("NRCH", "LIVST", i))
+    #     classifier.testClassifier(i)
 
-    for i in range(10,3001,10):
-        classifier.buildClassifier(dq.getAllTrains("NRCH", "DISS", i))
-        classifier.testClassifier(i)
+    #print("TESTING CLASSIFIER COMPLETE")
 
-    for i in range(10,3001,10):
-        classifier.buildClassifier(dq.getAllTrains("NRCH", "LIVST", i))
-        classifier.testClassifier(i)
-
-    print("TESTING CLASSIFIER COMPLETE")
-
-    # response = classifier.classifyInstance({"to":"DISS", "from":"NRCH", "planned_dep_time":"1630", "delay_mins":0})
-    # print(response)
-    # print("CLASSIFYING INSTANCE COMPLETE")
+    response = classifier.classifyInstance({"to":"DISS", "from":"NRCH", "planned_dep_time":"1630", "delay_mins":10})
+    print(response)
+    print("CLASSIFYING INSTANCE COMPLETE")
 
