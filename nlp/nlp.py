@@ -2,6 +2,7 @@ import spacy
 import random
 import dateparser
 from decimal import *
+from KnowledgeBase import KnowledgeBase
 #from controller import controller
 
 #nlp = spacy.load("en_core_web_sm") #Load language model object (sm is small version)
@@ -12,6 +13,7 @@ class ClassifiedSentence:
     def __init__(self,sentence,typ):
         self.sentence = sentence
         self.type = typ
+        
 
     def __str__(self):
         return self.sentence + " -> " + self.type
@@ -21,6 +23,8 @@ class ReasoningEngine:
 
     def __init__(self):
         # Sentences we'll respond with if the user greeted us
+        self.kb = KnowledgeBase.KnowledgeBase()
+        self.similarityThreshold = 0.05
         self.GREETINGS = ("Hello", "Hi", "Greetings")
         self.RESPONSES = ("... my day was fine thank for asking... *rolls eyes*", "WHY DO YOU ALWAYS JUST TALK AT ME", "It would be nice if you just listened to me for once...",
          "Well, that's awesome for someone like you", "I don't have the time nor the crayons to explain this to you.")
@@ -95,6 +99,10 @@ class ReasoningEngine:
         "not, that's not right"
     )
 
+    # KNOWLEDGE BASE-------------------------------------------------
+
+  
+
 
     def make_decision(self,classifiedSentence):
         # is looking for train ticket? if query.type == 'query'
@@ -119,27 +127,40 @@ class ReasoningEngine:
         for previous in ReasoningEngine.trainInformation:
             example = nlp(previous)
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
-            if cleaned_sentence.similarity(cleaned_previous) > best_score: 
-                best_score = cleaned_sentence.similarity(cleaned_previous)
+            similarity = cleaned_sentence.similarity(cleaned_previous) 
+            if similarity > best_score: 
+                best_score = similarity
                 print("SCORE BOOKING: ", Decimal(best_score))
+
+                # Break if confident enough
+                confident = best_score > 1 - self.similarityThreshold
+                if(confident):
+                    print("CONFIDENT")
+                    break
               
         # determine if a DELAY type
-        for previous in ReasoningEngine.delayInformation:
-            example = nlp(previous)
-            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
-            if cleaned_sentence.similarity(cleaned_previous) > best_score:
-                best_score = cleaned_sentence.similarity(cleaned_previous)
-                print("SCORE DELAY: ", Decimal(best_score))
-                typ = "delay"
+        if not confident:
+            for previous in ReasoningEngine.delayInformation:
+                example = nlp(previous)
+                cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+                similarity = cleaned_sentence.similarity(cleaned_previous) 
+                if similarity > best_score:
+                    best_score = similarity
+                    print("SCORE DELAY: ", Decimal(best_score))
+                    typ = "delay"
+                    break
 
         # determine if a CHAT type
-        for previous in self.GREETINGS:
-            example = nlp(previous)
-            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
-            if cleaned_sentence.similarity(cleaned_previous) > best_score:
-                best_score = cleaned_sentence.similarity(cleaned_previous)
-                print("SCORE CHAT: ", Decimal(best_score))
-                typ = "chat"
+        if not confident:
+            for q, a in self.kb.chatKnowledge.items():
+                example = nlp(q)
+                cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+                similarity = cleaned_sentence.similarity(cleaned_previous)
+                if similarity > best_score:
+                    best_score = similarity
+                    print("SCORE CHAT: ", Decimal(best_score))
+                    typ = "chat"
+                    break
 
         # TODO: better way of classifying intent?
 
@@ -270,6 +291,23 @@ class ReasoningEngine:
                 formatted_time = self.convert_time(ent.text)
                 dict.update({"time": formatted_time}) 
 
+
+        # Compare user input to knowledge base to determine appropriate response
+        sent = nlp(text)
+        cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
+        best_score = 0
+
+        for q, a in self.kb.bookingKnowledge.items():
+            example = nlp(q)
+            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+            if cleaned_sentence.similarity(cleaned_previous) > best_score:
+                best_score = cleaned_sentence.similarity(cleaned_previous)
+                response = a
+        
+        return response
+
+
+
     # attempts to return delay info
     # FROM / TO / PLANNED_DEP_TIME / DELAY_MINS
     # TODO: controller will pass in a dict of what it knows, it is this functions job to try and identify information from the text, update the dictionary and return it
@@ -371,3 +409,27 @@ class ReasoningEngine:
                 # date entity found, add to dictionary
                 if(token.pos_ is "NUM"):
                     dict.update({"delay_mins": token.text}) 
+
+
+    def get_chat_response(self, user_query):
+
+        sent = nlp(user_query)
+        cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
+        best_score = 0
+
+        for q, a in self.kb.chatKnowledge.items():
+            example = nlp(q)
+            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+            similarity = cleaned_sentence.similarity(cleaned_previous)
+            if similarity > best_score:
+                best_score = similarity
+                response = a
+
+                # Break if confident enough
+                confident = best_score > 1 - self.similarityThreshold
+                if(confident):
+                    print("CONFIDENT")
+                    print("SCORE CHAT RESPONSE: ", Decimal(best_score))
+                    break
+        
+        return response

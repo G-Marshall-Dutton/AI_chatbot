@@ -1,15 +1,16 @@
 from webScraper import webScraper
-from delay_prediction import delays
+from delay_prediction.DelayController import DelayController
 
 class ConversationController():
     def __init__(self, nlp):
 
         self.scraper = webScraper.webScraper()
-
-
-        # Chat : Booking : Delay 
+        self.delay_controller = DelayController()
         self.nlp = nlp
+
         self.context = None
+        
+        # Chat : Booking : Delay 
         self.state = {
             'from': None,
             'to': None,
@@ -129,7 +130,7 @@ class ConversationController():
             self.delay_state['from'] = 'NRCH'
 
             # Predict delay
-            response = delays.getEstimatedArrivalTimeV1(self.delay_state)
+            response = self.delay_controller.get_delay(self.delay_state)
             return response
 
         # If delay_state is not full
@@ -165,8 +166,7 @@ class ConversationController():
         # If we're waiting on ticket info confirmation
         if(self.awaiting_confirmation):
             print(user_query)
-            
-            # NEED TO SWAP THIS FOR NLP
+
             if(self.nlp.affirmation(user_query)):
                 self.state_confirmed = True
                 self.context = "booking"
@@ -197,17 +197,18 @@ class ConversationController():
             self.context = self.nlp.classify_user_sentence(user_query)
             print('DETERMINING self.context...')
             print('self.context:', self.context)
-
+ 
         if self.context is "booking": 
 
             # Get info from NLP
             print('STATE:', self.state)
             print('UPDATING STATE...')
-            self.nlp.get_journey_info(user_query, self.state)
+            response = self.nlp.get_journey_info(user_query, self.state)
             print('STATE:', self.state)
 
             # determine appropriate response
-            response = self.determine_train_response()
+            #response = self.determine_train_response()
+            
             print('RESPONSE:', response)
 
         elif self.context is "delay":
@@ -224,7 +225,7 @@ class ConversationController():
 
         else:
             # determine appropriate response
-            response = "General chit chat"
+            response = self.nlp.get_chat_response(user_query)
         
         return response
 
