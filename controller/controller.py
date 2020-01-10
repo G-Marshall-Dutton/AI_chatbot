@@ -231,7 +231,7 @@ class ConversationController():
 
         else:
             # determine appropriate response
-            response = self.nlp.get_chat_response(user_query)
+            response = self.nlp.get_chat_response_from_model(user_query)
         
         return response
 

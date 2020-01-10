@@ -34,8 +34,8 @@ class KnowledgeBase():
         }
 
         #self.readCSV()
-        # self.readTSV()
-        self.trainModel()
+        self.readTSV()
+        self.chat_model = self.trainModel()
 
 
 
@@ -133,13 +133,20 @@ class KnowledgeBase():
         #                    Uses chi2 ('chi squared') algorithm to determine k best features
         #
         # LinearSVC()      : This is the classifier
-        pipeline = Pipeline([('vect', TfidfVectorizer(ngram_range=(1, 1), stop_words="english", sublinear_tf=True)), 
+        pipeline = Pipeline([('vect', TfidfVectorizer(ngram_range=(1, 1), stop_words="english", sublinear_tf=True, analyzer = 'word')), 
                              ('chi',  SelectKBest(chi2, k='all')),
-                             ('clf', LinearSVC(C=1.0, penalty='l1', max_iter=7000, dual=False))])
+                             ('clf', LinearSVC(C=1.5, penalty='l2', max_iter=7000, dual=False))])
+
 
 
         model = pipeline.fit(X_train, y_train)
         print('MODEL BUILT.')
         print('TESTING ACCURACY...')
         print('ACCURACY:', model.score(X_test, y_test))
-        input('PRESS ENTER TO CONTINUE...')
+        #input('PRESS ENTER TO CONTINUE...')
+
+        return model
+
+
+
+        # 74.33% - (1,1) , 'all' , max_iter=7000

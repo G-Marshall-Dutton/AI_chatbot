@@ -3,6 +3,10 @@ import random
 import dateparser
 from decimal import *
 from KnowledgeBase import KnowledgeBase
+
+from nltk.corpus import stopwords
+from nltk.stem import SnowballStemmer
+
 #from controller import controller
 
 #nlp = spacy.load("en_core_web_sm") #Load language model object (sm is small version)
@@ -456,5 +460,17 @@ class ReasoningEngine:
                     break
         
         return response
+
+
+    def get_chat_response_from_model(self, user_query):
+        print("RESPONDING FROM MODEL")
+
+        # Generic words
+        stops = stopwords.words('english')
+        # used to reduce word to its lemma
+        stemmer = SnowballStemmer('english')
+
+        #user_query = user_query.apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
+        return str(self.kb.chat_model.predict([user_query]))
 
 
