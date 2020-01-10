@@ -25,6 +25,7 @@ class ReasoningEngine:
         # Sentences we'll respond with if the user greeted us
         self.kb = KnowledgeBase.KnowledgeBase()
         self.similarityThreshold = 0.05
+        self.context_similarity_threshold = 0.15
         self.GREETINGS = ("Hello", "Hi", "Greetings")
         self.RESPONSES = ("... my day was fine thank for asking... *rolls eyes*", "WHY DO YOU ALWAYS JUST TALK AT ME", "It would be nice if you just listened to me for once...",
          "Well, that's awesome for someone like you", "I don't have the time nor the crayons to explain this to you.")
@@ -57,6 +58,13 @@ class ReasoningEngine:
 
     trainInformation = (
         "can i book a train?",
+        "can i book a ticket?",
+        "can i book",
+        "can i have",
+        "ticket",
+        "book",
+        "reserve",
+        "order",
         "i would like to book a train from cambridge to london",
         "when is the nearest tarin to bristol",
         "whats the cheapest train to birmingham",
@@ -65,15 +73,18 @@ class ReasoningEngine:
     )
 
     delayInformation = (
+        "I'm delayed",
         "i am delayed",
         "how long am i likely to be delayed?",
         "how late is my train?",
         "my train is late",
         "how much longer is this train going to be?",
         "delay",
+        "delayed",
         "late",
         "can you help me with my train delay?",
-        "how late is my train likely to be?"
+        "how late is my train likely to be?",
+        "when will I arrive"
     )
 
     affirmationTypes = (
@@ -121,6 +132,7 @@ class ReasoningEngine:
         sent = nlp(sentence)
         cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
         best_score = 0
+        confident = False
 
         # determine if a BOOKING type
         typ = "booking"
@@ -133,7 +145,7 @@ class ReasoningEngine:
                 print("SCORE BOOKING: ", Decimal(best_score))
 
                 # Break if confident enough
-                confident = best_score > 1 - self.similarityThreshold
+                confident = best_score > 1 - self.context_similarity_threshold
                 if(confident):
                     print("CONFIDENT")
                     break
@@ -148,7 +160,12 @@ class ReasoningEngine:
                     best_score = similarity
                     print("SCORE DELAY: ", Decimal(best_score))
                     typ = "delay"
-                    break
+                    
+                     # Break if confident enough
+                    confident = best_score > 1 - self.context_similarity_threshold
+                    if(confident):
+                        print("CONFIDENT")
+                        break
 
         # determine if a CHAT type
         if not confident:
@@ -297,6 +314,7 @@ class ReasoningEngine:
         cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
         best_score = 0
 
+        response = "DIDNT GET RESPONSE"
         for q, a in self.kb.bookingKnowledge.items():
             example = nlp(q)
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
@@ -421,6 +439,11 @@ class ReasoningEngine:
             example = nlp(q)
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
             similarity = cleaned_sentence.similarity(cleaned_previous)
+
+            # THIS CODE IS JUST FOR DEBUGGING EMPTY VECTOR WARNING
+            # if similarity == 0.0:
+            #     print(cleaned_previous.text)
+            #     input("Press Enter to continue...")
             if similarity > best_score:
                 best_score = similarity
                 response = a
@@ -433,3 +456,5 @@ class ReasoningEngine:
                     break
         
         return response
+
+

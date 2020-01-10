@@ -76,6 +76,9 @@ class ConversationController():
             # Reset context
             self.context = None
 
+            # Reset state
+            self.state_confirmed = False
+
             # web scrape info 
             response = self.getTicket()
             return response
@@ -124,6 +127,9 @@ class ConversationController():
 
             # Reset context
             self.context = None
+
+            # Reset delay confirmation
+            self.delay_confirmed = False
 
             # DELETE THIS WHEN INFO IS BEING CONVERTED PROPERLY TO STATION CODES
             self.delay_state['to'] = 'LIVST'
@@ -191,7 +197,7 @@ class ConversationController():
                 self.context = "delay" 
                 print("NOT CONFIRMED") 
 
-        # WILL NEED TO CHANGE THIS BACK TO 'ELSE' (if we can find a different way to stay in delay self.context)
+        # KEEPS YOU IN BOOKING OR DELAY CONTEXT
         elif(self.context == None or self.context == 'chat'):
             # Recieve self.context from NLP : 'chat' , 'booking' , 'delay'
             self.context = self.nlp.classify_user_sentence(user_query)
@@ -203,11 +209,11 @@ class ConversationController():
             # Get info from NLP
             print('STATE:', self.state)
             print('UPDATING STATE...')
-            response = self.nlp.get_journey_info(user_query, self.state)
+            self.nlp.get_journey_info(user_query, self.state)
             print('STATE:', self.state)
 
             # determine appropriate response
-            #response = self.determine_train_response()
+            response = self.determine_train_response()
             
             print('RESPONSE:', response)
 
