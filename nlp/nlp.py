@@ -6,6 +6,9 @@ from KnowledgeBase import KnowledgeBase
 
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
+from pandas import DataFrame
+import re
+import numpy as np
 
 #from controller import controller
 
@@ -88,7 +91,8 @@ class ReasoningEngine:
         "late",
         "can you help me with my train delay?",
         "how late is my train likely to be?",
-        "when will I arrive"
+        "do you know when will I arrive",
+        "when will i get there"
     )
 
     affirmationTypes = (
@@ -100,6 +104,10 @@ class ReasoningEngine:
         "that's right",
         "yep",
         "aye",
+        "sure",
+        "yup",
+        "you got it"
+        "uh huh",
     )
 
     refutationTypes = (
@@ -111,7 +119,8 @@ class ReasoningEngine:
         "incorrect",
         "that's wrong",
         "no, that's wrong",
-        "not, that's not right"
+        "not, that's not right",
+        "nuh uh",
     )
 
     # KNOWLEDGE BASE-------------------------------------------------
@@ -470,7 +479,15 @@ class ReasoningEngine:
         # used to reduce word to its lemma
         stemmer = SnowballStemmer('english')
 
-        #user_query = user_query.apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
+        myDict = {'USER_QUERY' : user_query}
+        df = DataFrame(list(myDict.items()),columns = ['USER QUERY','Question'])
+
+        # Clean up data by removing stop words and reduce others to their lemma
+        df['cleaned'] = df['Question'].apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
+
+        user_query = df.cleaned[0]
+
+        print("USER CLEANED:", user_query)
         return str(self.kb.chat_model.predict([user_query]))
 
 

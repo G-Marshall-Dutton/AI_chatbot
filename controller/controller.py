@@ -78,12 +78,17 @@ class ConversationController():
 
             # Reset state
             self.state_confirmed = False
+            self.awaiting_confirmation = False
 
             # web scrape info 
             response = self.getTicket()
+
+            # Reset state
+            self.reset_state()
+
             return response
 
-        elif not self.state_confirmed and self.awaiting_confirmation:
+        elif self.awaiting_confirmation:
             # Reset state
             self.reset_state()
             self.awaiting_confirmation = False
@@ -188,7 +193,7 @@ class ConversationController():
             print(user_query)
             
             # NEED TO SWAP THIS FOR NLP
-            if(user_query == "yes"):
+            if(self.nlp.affirmation(user_query)):
                 self.delay_confirmed = True
                 self.context = "delay"
                 print("CONFIRMED")

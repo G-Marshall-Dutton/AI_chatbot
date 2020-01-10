@@ -52,11 +52,16 @@ def index():
 # Endpoint for communication... recieving and sending responses
 @app.route("/chat", methods=['POST'])
 def chat():
+    
+    # Reset status
+    status = ''
+
     #Read in userInput as string
     userInput = request.get_json()['userMessage']
 
     # Pass the user input to the controller : respond deals with connection to NLP
     response = controller.respond(userInput)
+    print("RESPONSE IS OF TYPE", type(response))
 
     # Determine if its a normal response or the scraped ticket info
     # Normal response

@@ -119,7 +119,7 @@ class KnowledgeBase():
 
         # Clean up data by removing stop words and reduce others to their lemma
         data['cleaned'] = data['Question'].apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
-
+        
         # Split data into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(data['cleaned'], data.Answer, test_size=0.2)
 
