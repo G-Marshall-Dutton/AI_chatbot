@@ -542,7 +542,7 @@ class ReasoningEngine:
         df = DataFrame(list(myDict.items()),columns = ['USER QUERY','Question'])
 
         # Clean up data by removing stop words and reduce others to their lemma
-        df['cleaned'] = df['Question'].apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
+        df['cleaned'] = df['Question'] #.apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
 
         user_query = df.cleaned[0]
 

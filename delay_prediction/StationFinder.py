@@ -44,6 +44,9 @@ class StationFinder:
                 best_key_score = curr_score
                 best_key = key
 
+            if(best_key is None):
+                best_key = code
+
         return self.stationToCodeDict[best_key]
 
     # returns station
@@ -62,6 +65,9 @@ class StationFinder:
             if curr_score > best_key_score:
                 best_key_score = curr_score
                 best_key = key
+
+        if(best_key is None):
+            best_key = code
 
         return self.codeToStationDict[best_key]
 

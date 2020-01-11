@@ -174,7 +174,7 @@ class KnowledgeBase():
         stemmer = SnowballStemmer('english')
 
         # Clean up data by removing stop words and reduce others to their lemma
-        data['cleaned'] = data['Question'].apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
+        data['cleaned'] = data['Question'] #.apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
 
         # Split data into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(data['cleaned'], data.Answer, test_size=0.2)
@@ -189,7 +189,7 @@ class KnowledgeBase():
         #                    Uses chi2 ('chi squared') algorithm to determine k best features
         #
         # LinearSVC()      : This is the classifier
-        pipeline = Pipeline([('vect', TfidfVectorizer(ngram_range=(1, 1), stop_words="english", sublinear_tf=True, analyzer = 'word')), 
+        pipeline = Pipeline([('vect', TfidfVectorizer(ngram_range=(1, 2), stop_words="english", sublinear_tf=True, analyzer = 'word')), 
                              ('chi',  SelectKBest(chi2, k='all')),
                              ('clf', LinearSVC(C=1.5, penalty='l2', max_iter=7000, dual=False))])
 
