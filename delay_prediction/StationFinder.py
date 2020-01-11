@@ -100,11 +100,11 @@ class StationFinder:
         return self.codeToStationDict[best_key]
 
 #TEST CODE
-sf = StationFinder()
+#sf = StationFinder()
 
-while(True):
-    # get user input
-    userInput = input("Input for Station Finder > ")
+# while(True):
+#     # get user input
+#     userInput = input("Input for Station Finder > ")
 
 #     # TEST FOR GET CODE
 #     #print(sf.getCode(userInput))
@@ -113,7 +113,7 @@ while(True):
 #     print(sf.getStation(userInput))
 
 # TEST FOR GET SHORTCODE
-    print(sf.getShortCode(userInput))
+    # print(sf.getShortCode(userInput))
 
 
 
