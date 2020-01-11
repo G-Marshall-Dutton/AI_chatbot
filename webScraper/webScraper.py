@@ -32,7 +32,13 @@ class webScraper():
         page_soup = soup(page_html, "html.parser")
 
         # Scrape cheapest ticket info
-        element= page_soup.find("td",{"class":"has-cheapest"}).find("script")
+        element = page_soup.find("td",{"class":"has-cheapest"})
+
+        if(element is None):
+            print("HANDLING ERROR")
+            return 'Sorry! I can\'t find tickets for then. Remember I can only find you trains in the future not the past!'
+
+        element = element.find("script")
 
         # Remove script tags from 'element'
         text = element.get_text()

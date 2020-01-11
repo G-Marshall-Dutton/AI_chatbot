@@ -193,7 +193,7 @@ class ConversationController():
             # Return confirmation message
             self.lock_delay = False
             self.awaiting_delay_confirmation = True
-            return "So you are traveling from %s to %s. You we're supposed to leave at %s and have been delayed roughly %s minutes so far?" % (self.delay_state['from'], self.delay_state['to'], self.delay_state['planned_dep_time'], self.delay_state['delay_mins'])
+            return "So you are traveling from %s to %s. You we're supposed to leave at %s and have been delayed roughly %s minutes so far?" % (self.sf.getStation(self.delay_state['from']), self.sf.getStation(self.delay_state['to']), self.delay_state['planned_dep_time'], self.delay_state['delay_mins'])
 
 
     # Determine how to respond
@@ -296,7 +296,14 @@ class ConversationController():
 
     # Returns web scrapped ticket info
     def getTicket(self):
-        ticketInfo = self.scraper.scrape(self.state)
+        new_state = {
+            'to' : self.sf.getShortCode(self.state['to']),
+            'from' : self.sf.getShortCode(self.state['from']),
+            'date' : self.state['date'],
+            'time' : self.state['time']
+        }
+        
+        ticketInfo = self.scraper.scrape(new_state)
         
         return ticketInfo
 
