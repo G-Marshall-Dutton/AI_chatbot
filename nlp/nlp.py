@@ -76,21 +76,27 @@ class ReasoningEngine:
         "when is the nearest tarin to bristol",
         "whats the cheapest train to birmingham",
         "find me a cheap train to newcastle",
-        "i need a cheap and quick train to london tomorrow"
+        "i need a cheap and quick train to london tomorrow",
+        "I need to get a train",
+        "I need a train",
+        "I need to catch a train",
+        "find me train tickets",
+        "find me chep trains",
+        "find me cheap tickets"
     )
 
     delayInformation = (
         "I'm delayed",
         "i am delayed",
         "how long am i likely to be delayed?",
-        "how late is my train?",
-        "my train is late",
-        "how much longer is this train going to be?",
+        "how late is ",
+        "I'm late",
+        "how much longer is this going to be?",
         "delay",
         "delayed",
         "late",
-        "can you help me with my train delay?",
-        "how late is my train likely to be?",
+        "can you help me with my delay?",
+        "how late am I likely to be?",
         "do you know when will I arrive",
         "when will i get there"
     )
@@ -121,6 +127,9 @@ class ReasoningEngine:
         "no, that's wrong",
         "not, that's not right",
         "nuh uh",
+        "nope",
+        "no way",
+        "nowhere"
     )
 
     # KNOWLEDGE BASE-------------------------------------------------
@@ -207,22 +216,59 @@ class ReasoningEngine:
         sent = nlp(sentence)
         cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
         best_score = 0
+        confidence_threshold = 0.35
 
         # determine if a YES type
         for previous in ReasoningEngine.affirmationTypes:
             example = nlp(previous)
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
-            if cleaned_sentence.similarity(cleaned_previous) > best_score:
-                best_score = cleaned_sentence.similarity(cleaned_previous)
+            similarity = cleaned_sentence.similarity(cleaned_previous)
+            confident = similarity > 1- confidence_threshold  
+            if similarity > best_score and confident:
+                print("AFFIRMAION SIMILARITY", Decimal(similarity))
+                best_score = similarity
                 result = True
+
+        # # determine if a NO type
+        # for previous in ReasoningEngine.refutationTypes:
+        #     example = nlp(previous)
+        #     cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+        #     similarity = cleaned_sentence.similarity(cleaned_previous)
+        #     if similarity > best_score:
+        #         best_score = similarity
+        #         result = False
+
+        return result
+
+
+    # return true if user replies with affirmation, else false
+    def refutation(self, sentence):
+
+        result = False
+        
+        sent = nlp(sentence)
+        cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
+        best_score = 0
+        confidence_threshold = 0.35
 
         # determine if a NO type
         for previous in ReasoningEngine.refutationTypes:
             example = nlp(previous)
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
-            if cleaned_sentence.similarity(cleaned_previous) > best_score:
-                best_score = cleaned_sentence.similarity(cleaned_previous)
-                result = False
+            similarity = cleaned_sentence.similarity(cleaned_previous)
+            confident = similarity > 1 - confidence_threshold 
+            if similarity > best_score and confident:
+                best_score = similarity
+                result = True
+
+        # # determine if a YES type
+        # for previous in ReasoningEngine.affirmationTypes:
+        #     example = nlp(previous)
+        #     cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+        #     similarity = cleaned_sentence.similarity(cleaned_previous)
+        #     if similarity > best_score:
+        #         best_score = similarity
+        #         result = False
 
         return result
         
@@ -265,8 +311,13 @@ class ReasoningEngine:
 
             #print("Only 1 pnoun detected")
 
+            # If FROM and TO are both missing
+            if(dict.get("from") is None and dict.get("to") is None):
+                print("Adding a from ONLY")
+                dict.update({"to": pnouns[0]})
+
             # if only FROM is missing
-            if(dict.get("from") is None and dict.get("to") is not None):
+            elif(dict.get("from") is None and dict.get("to") is not None):
                 print("Adding a from ONLY")
                 dict.update({"from": pnouns[0]})
 
@@ -376,13 +427,18 @@ class ReasoningEngine:
 
             print("Only 1 pnoun detected")
 
+            # If FROM and TO are both missing
+            if(dict.get("from") is None and dict.get("to") is None):
+                print("Adding a from ONLY")
+                dict.update({"to": pnouns[0]})
+
             # if only FROM is missing
-            if(dict.get("from") is None and dict.get("to") is not None):
+            elif(dict.get("from") is None and dict.get("to") is not None):
                 print("Adding a from ONLY")
                 dict.update({"from": pnouns[0]})
 
             # if only TO is missing
-            if(dict.get("from") is not None and dict.get("to") is None):
+            elif(dict.get("from") is not None and dict.get("to") is None):
                 print("Adding a to ONLY")
                 dict.update({"to": pnouns[0]}) 
 
@@ -488,6 +544,12 @@ class ReasoningEngine:
         user_query = df.cleaned[0]
 
         print("USER CLEANED:", user_query)
-        return str(self.kb.chat_model.predict([user_query]))
+
+
+        # Predict answer from the model
+        response = str(self.kb.chat_model.predict([user_query]))
+        # Format string
+        response = response.replace('[', '').replace(']','').replace('\'', '').replace('"','')
+        return response
 
 

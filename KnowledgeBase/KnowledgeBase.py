@@ -16,11 +16,61 @@ from sklearn.feature_selection import SelectKBest, chi2
 class KnowledgeBase():
     def __init__(self):
         
-        
+        self.to_responses = [
+            'Where are you going?',
+            'Where would you like to go?',
+            'Where are you traveling to?',
+            'Where are you headed?',
+        ]
+
+        self.from_responses= [
+            'Where are you coming from?',
+            'Where are you traveling from?',
+            'Which station are you coming from?',
+            'travelling from where?',
+        ]
+
+        self.dep_time_responses = [
+            'When would you like to leave?',
+            'What time do you want to leave?',
+            'What time would you like to depart?',
+            'Departing at what time?'
+        ]
+
+        self.date_responses = [
+            'What date would you like to travel?',
+            'What date is this for?',
+            'Can I have the date you\'re leaving?',
+            'When are you traveling?'
+        ]
+
+
+        self.delay_to_responses = [
+            'Where are you going?',
+            'Which station are you traveling to?',
+            'Where are you traveling to?',
+            'Where are you headed?',
+        ]
+
+        self.delay_dep_time_responses = [
+            'When was your train supposed to depart?',
+            'What time was your train scheduled to depart?',
+            'When was the train supposed to leave?'
+        ]
+
+        self.delayed_by_responses = [
+            'How long has your journey been delayed so far?',
+            'How delayed are you at the moment?',
+            'How many minutes are you delayed?',
+            'For roughly how long have you been delayed?'
+
+        ]
 
         self.chatKnowledge = {
 
         }
+
+        
 
 
         self.bookingKnowledge = {
@@ -110,7 +160,13 @@ class KnowledgeBase():
         print('BUILDING MODEL...')
 
         # Read all data into pandas DataFrame
-        data = pd.read_csv('qna_chitchat_witty.tsv', sep='\t')
+        data1 = pd.read_csv('qna_chitchat_witty.tsv', sep='\t')
+
+        # Read additional data into pandas DataFrame
+        data2 = pd.read_csv('QA1.csv')
+
+        # Combine datasets
+        data = pd.concat([data1, data2])
 
         # Generic words
         stops = stopwords.words('english')
@@ -119,7 +175,7 @@ class KnowledgeBase():
 
         # Clean up data by removing stop words and reduce others to their lemma
         data['cleaned'] = data['Question'].apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
-        
+
         # Split data into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(data['cleaned'], data.Answer, test_size=0.2)
 
