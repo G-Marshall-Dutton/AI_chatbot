@@ -404,6 +404,15 @@ class ReasoningEngine:
                 formatted_time = self.convert_time(ent.text)
                 dict.update({"time": formatted_time}) 
 
+        # if everything else is found except time and NER isn't picking it up, detect nums and dateparse them + neighbour
+        if(dict.get("from") is not None and dict.get("to") is not None and dict.get("date") is not None):
+            for token in doc:
+                if token.pos_ is "NUM":
+                    new_time = token.text + token.nbor(1).text
+                    formatted_time = self.convert_time(new_time)
+                    dict.update({"time": formatted_time}) 
+                    
+
 
         # # Compare user input to knowledge base to determine appropriate response
         # sent = nlp(text)
@@ -528,6 +537,14 @@ class ReasoningEngine:
                 # date entity found, add to dictionary
                 if(token.pos_ is "NUM"):
                     dict.update({"delay_mins": token.text}) 
+
+        # if everything else is found except time and NER isn't picking it up, detect nums and dateparse them + neighbour
+        if(dict.get("from") is not None and dict.get("to") is not None and dict.get("delay_mins") is not None):
+            for token in doc:
+                if token.pos_ is "NUM":
+                    new_time = token.text + token.nbor(1).text
+                    formatted_time = self.convert_time(new_time)
+                    dict.update({"planned_dep_time": formatted_time}) 
 
 
     def get_chat_response(self, user_query):
