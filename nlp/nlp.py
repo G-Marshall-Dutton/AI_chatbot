@@ -11,6 +11,8 @@ import re
 import numpy as np
 
 from delay_prediction import StationFinder
+
+from datetime import timedelta
 #from controller import controller
 
 #nlp = spacy.load("en_core_web_sm") #Load language model object (sm is small version)
@@ -41,15 +43,29 @@ class ReasoningEngine:
          "Well, that's awesome for someone like you", "I don't have the time nor the crayons to explain this to you.")
 
     def get_random_greeting(self):
-        return random.choice(self.GREETINGS)
+        greeting = random.choice(self.GREETINGS) + ". I'm Thomas! I can help you with cheap train tickets and estimated arrival times but you can ask me anything and I'll give you my best answer! So how can help you?"
+        return greeting
 
     def get_random_response(self):
         return random.choice(self.RESPONSES)
 
     # convert date to format needed for nationalrail (ddmmyy)
     def convert_date(self, d):
+        
+        # Check if date is given 'days'
+        days_found = False
+        if('days' in d):
+            days_found = True
+            elements = d.split(' ')
+            days = elements[0]
+            print(days)
+
         # user dateparser to parse the date into a python datetime
-        parsed_date = dateparser.parse(d)
+        parsed_date = dateparser.parse(d,settings={'PREFER_DATES_FROM': 'future'})
+
+        if(days_found):
+            days = int(days)*2
+            parsed_date = parsed_date + timedelta(days=days)
 
         # format output string
         date = parsed_date.strftime("%d%m%y")
@@ -59,6 +75,7 @@ class ReasoningEngine:
     # convert time to format needed for nationalrail (hhmm 24)
     def convert_time(self, t):
         # user dateparser to parse the date into a python datetime
+
         parsed_time = dateparser.parse(t)
 
         time = parsed_time.strftime("%H%M")
@@ -67,6 +84,7 @@ class ReasoningEngine:
 
 
     trainInformation = (
+        "I want to book a ticket",
         "can i book a train?",
         "can i book a ticket?",
         "can i book",
@@ -219,7 +237,7 @@ class ReasoningEngine:
         sent = nlp(sentence)
         cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
         best_score = 0
-        confidence_threshold = 0.35
+        confidence_threshold = 0.22
 
         # determine if a YES type
         for previous in ReasoningEngine.affirmationTypes:
@@ -252,7 +270,7 @@ class ReasoningEngine:
         sent = nlp(sentence)
         cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
         best_score = 0
-        confidence_threshold = 0.35
+        confidence_threshold = 0.22
 
         # determine if a NO type
         for previous in ReasoningEngine.refutationTypes:
@@ -317,7 +335,7 @@ class ReasoningEngine:
             # If FROM and TO are both missing
             if(dict.get("from") is None and dict.get("to") is None):
                 print("Adding a from ONLY")
-                dict.update({"to": pnouns[0]})
+                dict.update({"to": self.stationFinder.getCode(pnouns[0])})
 
             # if only FROM is missing
             elif(dict.get("from") is None and dict.get("to") is not None):
@@ -334,15 +352,18 @@ class ReasoningEngine:
 
                 # if previous word is "from", then must be source 
                 if(token.nbor(-1).text == "from"):
-                    dict.update({"from": self.stationFinder.getCode(pnouns[0])})   # add to dict         
+                    dict.update({"from": self.stationFinder.getCode(pnouns[0])})   # add to dict     
+                        
 
                 # if previous word is "to", then must be destination
                 if(token.nbor(-1).text == "to"):
                     dict.update({"to": self.stationFinder.getCode(pnouns[0])}) 
+                    if(dict['from'] == dict['to']):
+                        dict['from'] = None
 
 
         # otherwise if 2 pnouns found then determine to/from 
-        elif(len(pnouns) < 3):
+        elif len(pnouns) < 3 and len(pnouns) > 0:
 
             # loop through pnouns
             for i in range(len(pnouns)):
@@ -357,14 +378,22 @@ class ReasoningEngine:
                     # if previous word is "to", then must be destination
                     if(doc[pnouns_pos[i]].nbor(-1).text == "to"):
                         dict.update({"to": self.stationFinder.getCode(pnouns[i])}) 
+
+            # Deal with pronouns we havent assigned yet
+            if(dict['from'] is None):
+                dict.update({"from": self.stationFinder.getCode(pnouns[0])})
+
+            if(dict['to'] is None):
+                dict.update({"to": self.stationFinder.getCode(pnouns[0])})
+
         # otherwise more than 2 pnouns found, so do nothing
         #else:
             #print("No proper nouns found")
 
-
+        print("ABOUT TO PRINT ENTS")
         # iterate through entities (looking for DATE/TIME)
         for ent in doc.ents: 
-
+            print("ENT IS:", ent.label_, ent.text)
             # date entity found, add to dictionary
             if(ent.label_ is "DATE"):
                 formatted_date = self.convert_date(ent.text)
@@ -376,20 +405,20 @@ class ReasoningEngine:
                 dict.update({"time": formatted_time}) 
 
 
-        # Compare user input to knowledge base to determine appropriate response
-        sent = nlp(text)
-        cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
-        best_score = 0
+        # # Compare user input to knowledge base to determine appropriate response
+        # sent = nlp(text)
+        # cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
+        # best_score = 0
 
-        response = "DIDNT GET RESPONSE"
-        for q, a in self.kb.bookingKnowledge.items():
-            example = nlp(q)
-            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
-            if cleaned_sentence.similarity(cleaned_previous) > best_score:
-                best_score = cleaned_sentence.similarity(cleaned_previous)
-                response = a
+        # response = "DIDNT GET RESPONSE"
+        # for q, a in self.kb.bookingKnowledge.items():
+        #     example = nlp(q)
+        #     cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+        #     if cleaned_sentence.similarity(cleaned_previous) > best_score:
+        #         best_score = cleaned_sentence.similarity(cleaned_previous)
+        #         response = a
         
-        return response
+        # return response
 
 
 
@@ -433,7 +462,7 @@ class ReasoningEngine:
             # If FROM and TO are both missing
             if(dict.get("from") is None and dict.get("to") is None):
                 print("Adding a from ONLY")
-                dict.update({"to": pnouns[0]})
+                dict.update({"to": self.stationFinder.getCode(pnouns[0])})
 
             # if only FROM is missing
             elif(dict.get("from") is None and dict.get("to") is not None):
@@ -542,7 +571,7 @@ class ReasoningEngine:
         df = DataFrame(list(myDict.items()),columns = ['USER QUERY','Question'])
 
         # Clean up data by removing stop words and reduce others to their lemma
-        df['cleaned'] = df['Question'] #.apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
+        df['cleaned'] = df['Question'].apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
 
         user_query = df.cleaned[0]
 

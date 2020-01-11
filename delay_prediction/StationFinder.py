@@ -51,7 +51,7 @@ class StationFinder:
                 best_key = key
 
             if(best_key is None):
-                best_key = code
+                best_key = station
 
         return self.stationToCodeDict[best_key]
 
