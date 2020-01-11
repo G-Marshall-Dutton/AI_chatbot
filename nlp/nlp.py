@@ -2,6 +2,14 @@ import spacy
 import random
 import dateparser
 from decimal import *
+from KnowledgeBase import KnowledgeBase
+
+from nltk.corpus import stopwords
+from nltk.stem import SnowballStemmer
+from pandas import DataFrame
+import re
+import numpy as np
+
 from delay_prediction import StationFinder
 #from controller import controller
 
@@ -13,6 +21,7 @@ class ClassifiedSentence:
     def __init__(self,sentence,typ):
         self.sentence = sentence
         self.type = typ
+        
 
     def __str__(self):
         return self.sentence + " -> " + self.type
@@ -24,6 +33,9 @@ class ReasoningEngine:
 
     def __init__(self):
         # Sentences we'll respond with if the user greeted us
+        self.kb = KnowledgeBase.KnowledgeBase()
+        self.similarityThreshold = 0.05
+        self.context_similarity_threshold = 0.15
         self.GREETINGS = ("Hello", "Hi", "Greetings")
         self.RESPONSES = ("... my day was fine thank for asking... *rolls eyes*", "WHY DO YOU ALWAYS JUST TALK AT ME", "It would be nice if you just listened to me for once...",
          "Well, that's awesome for someone like you", "I don't have the time nor the crayons to explain this to you.")
@@ -56,23 +68,40 @@ class ReasoningEngine:
 
     trainInformation = (
         "can i book a train?",
+        "can i book a ticket?",
+        "can i book",
+        "can i have",
+        "ticket",
+        "book",
+        "reserve",
+        "order",
         "i would like to book a train from cambridge to london",
         "when is the nearest tarin to bristol",
         "whats the cheapest train to birmingham",
         "find me a cheap train to newcastle",
-        "i need a cheap and quick train to london tomorrow"
+        "i need a cheap and quick train to london tomorrow",
+        "I need to get a train",
+        "I need a train",
+        "I need to catch a train",
+        "find me train tickets",
+        "find me chep trains",
+        "find me cheap tickets"
     )
 
     delayInformation = (
+        "I'm delayed",
         "i am delayed",
         "how long am i likely to be delayed?",
-        "how late is my train?",
-        "my train is late",
-        "how much longer is this train going to be?",
+        "how late is ",
+        "I'm late",
+        "how much longer is this going to be?",
         "delay",
+        "delayed",
         "late",
-        "can you help me with my train delay?",
-        "how late is my train likely to be?"
+        "can you help me with my delay?",
+        "how late am I likely to be?",
+        "do you know when will I arrive",
+        "when will i get there"
     )
 
     affirmationTypes = (
@@ -84,6 +113,10 @@ class ReasoningEngine:
         "that's right",
         "yep",
         "aye",
+        "sure",
+        "yup",
+        "you got it"
+        "uh huh",
     )
 
     refutationTypes = (
@@ -95,8 +128,16 @@ class ReasoningEngine:
         "incorrect",
         "that's wrong",
         "no, that's wrong",
-        "not, that's not right"
+        "not, that's not right",
+        "nuh uh",
+        "nope",
+        "no way",
+        "nowhere"
     )
+
+    # KNOWLEDGE BASE-------------------------------------------------
+
+  
 
 
     def make_decision(self,classifiedSentence):
@@ -116,33 +157,52 @@ class ReasoningEngine:
         sent = nlp(sentence)
         cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
         best_score = 0
+        confident = False
 
         # determine if a BOOKING type
         typ = "booking"
         for previous in ReasoningEngine.trainInformation:
             example = nlp(previous)
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
-            if cleaned_sentence.similarity(cleaned_previous) > best_score: 
-                best_score = cleaned_sentence.similarity(cleaned_previous)
+            similarity = cleaned_sentence.similarity(cleaned_previous) 
+            if similarity > best_score: 
+                best_score = similarity
                 print("SCORE BOOKING: ", Decimal(best_score))
+
+                # Break if confident enough
+                confident = best_score > 1 - self.context_similarity_threshold
+                if(confident):
+                    print("CONFIDENT")
+                    break
               
         # determine if a DELAY type
-        for previous in ReasoningEngine.delayInformation:
-            example = nlp(previous)
-            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
-            if cleaned_sentence.similarity(cleaned_previous) > best_score:
-                best_score = cleaned_sentence.similarity(cleaned_previous)
-                print("SCORE DELAY: ", Decimal(best_score))
-                typ = "delay"
+        if not confident:
+            for previous in ReasoningEngine.delayInformation:
+                example = nlp(previous)
+                cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+                similarity = cleaned_sentence.similarity(cleaned_previous) 
+                if similarity > best_score:
+                    best_score = similarity
+                    print("SCORE DELAY: ", Decimal(best_score))
+                    typ = "delay"
+                    
+                     # Break if confident enough
+                    confident = best_score > 1 - self.context_similarity_threshold
+                    if(confident):
+                        print("CONFIDENT")
+                        break
 
         # determine if a CHAT type
-        for previous in self.GREETINGS:
-            example = nlp(previous)
-            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
-            if cleaned_sentence.similarity(cleaned_previous) > best_score:
-                best_score = cleaned_sentence.similarity(cleaned_previous)
-                print("SCORE CHAT: ", Decimal(best_score))
-                typ = "chat"
+        if not confident:
+            for q, a in self.kb.chatKnowledge.items():
+                example = nlp(q)
+                cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+                similarity = cleaned_sentence.similarity(cleaned_previous)
+                if similarity > best_score:
+                    best_score = similarity
+                    print("SCORE CHAT: ", Decimal(best_score))
+                    typ = "chat"
+                    break
 
         # TODO: better way of classifying intent?
 
@@ -159,22 +219,59 @@ class ReasoningEngine:
         sent = nlp(sentence)
         cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
         best_score = 0
+        confidence_threshold = 0.35
 
         # determine if a YES type
         for previous in ReasoningEngine.affirmationTypes:
             example = nlp(previous)
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
-            if cleaned_sentence.similarity(cleaned_previous) > best_score:
-                best_score = cleaned_sentence.similarity(cleaned_previous)
+            similarity = cleaned_sentence.similarity(cleaned_previous)
+            confident = similarity > 1- confidence_threshold  
+            if similarity > best_score and confident:
+                print("AFFIRMAION SIMILARITY", Decimal(similarity))
+                best_score = similarity
                 result = True
+
+        # # determine if a NO type
+        # for previous in ReasoningEngine.refutationTypes:
+        #     example = nlp(previous)
+        #     cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+        #     similarity = cleaned_sentence.similarity(cleaned_previous)
+        #     if similarity > best_score:
+        #         best_score = similarity
+        #         result = False
+
+        return result
+
+
+    # return true if user replies with affirmation, else false
+    def refutation(self, sentence):
+
+        result = False
+        
+        sent = nlp(sentence)
+        cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
+        best_score = 0
+        confidence_threshold = 0.35
 
         # determine if a NO type
         for previous in ReasoningEngine.refutationTypes:
             example = nlp(previous)
             cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
-            if cleaned_sentence.similarity(cleaned_previous) > best_score:
-                best_score = cleaned_sentence.similarity(cleaned_previous)
-                result = False
+            similarity = cleaned_sentence.similarity(cleaned_previous)
+            confident = similarity > 1 - confidence_threshold 
+            if similarity > best_score and confident:
+                best_score = similarity
+                result = True
+
+        # # determine if a YES type
+        # for previous in ReasoningEngine.affirmationTypes:
+        #     example = nlp(previous)
+        #     cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+        #     similarity = cleaned_sentence.similarity(cleaned_previous)
+        #     if similarity > best_score:
+        #         best_score = similarity
+        #         result = False
 
         return result
         
@@ -217,8 +314,13 @@ class ReasoningEngine:
 
             #print("Only 1 pnoun detected")
 
+            # If FROM and TO are both missing
+            if(dict.get("from") is None and dict.get("to") is None):
+                print("Adding a from ONLY")
+                dict.update({"to": pnouns[0]})
+
             # if only FROM is missing
-            if(dict.get("from") is None and dict.get("to") is not None):
+            elif(dict.get("from") is None and dict.get("to") is not None):
                 print("Adding a from ONLY")
                 dict.update({"from": self.stationFinder.getCode(pnouns[0])})
                 
@@ -273,6 +375,24 @@ class ReasoningEngine:
                 formatted_time = self.convert_time(ent.text)
                 dict.update({"time": formatted_time}) 
 
+
+        # Compare user input to knowledge base to determine appropriate response
+        sent = nlp(text)
+        cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
+        best_score = 0
+
+        response = "DIDNT GET RESPONSE"
+        for q, a in self.kb.bookingKnowledge.items():
+            example = nlp(q)
+            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+            if cleaned_sentence.similarity(cleaned_previous) > best_score:
+                best_score = cleaned_sentence.similarity(cleaned_previous)
+                response = a
+        
+        return response
+
+
+
     # attempts to return delay info
     # FROM / TO / PLANNED_DEP_TIME / DELAY_MINS
     # TODO: controller will pass in a dict of what it knows, it is this functions job to try and identify information from the text, update the dictionary and return it
@@ -310,13 +430,18 @@ class ReasoningEngine:
 
             print("Only 1 pnoun detected")
 
+            # If FROM and TO are both missing
+            if(dict.get("from") is None and dict.get("to") is None):
+                print("Adding a from ONLY")
+                dict.update({"to": pnouns[0]})
+
             # if only FROM is missing
-            if(dict.get("from") is None and dict.get("to") is not None):
+            elif(dict.get("from") is None and dict.get("to") is not None):
                 print("Adding a from ONLY")
                 dict.update({"from": self.stationFinder.getCode(pnouns[0])})
 
             # if only TO is missing
-            if(dict.get("from") is not None and dict.get("to") is None):
+            elif(dict.get("from") is not None and dict.get("to") is None):
                 print("Adding a to ONLY")
                 dict.update({"to": self.stationFinder.getCode(pnouns[0])}) 
 
@@ -374,3 +499,60 @@ class ReasoningEngine:
                 # date entity found, add to dictionary
                 if(token.pos_ is "NUM"):
                     dict.update({"delay_mins": token.text}) 
+
+
+    def get_chat_response(self, user_query):
+
+        sent = nlp(user_query)
+        cleaned_sentence = nlp(' '.join([str(t) for t in sent if not t.is_stop]))
+        best_score = 0
+
+        for q, a in self.kb.chatKnowledge.items():
+            example = nlp(q)
+            cleaned_previous = nlp(' '.join([str(t) for t in example if not t.is_stop]))
+            similarity = cleaned_sentence.similarity(cleaned_previous)
+
+            # THIS CODE IS JUST FOR DEBUGGING EMPTY VECTOR WARNING
+            # if similarity == 0.0:
+            #     print(cleaned_previous.text)
+            #     input("Press Enter to continue...")
+            if similarity > best_score:
+                best_score = similarity
+                response = a
+
+                # Break if confident enough
+                confident = best_score > 1 - self.similarityThreshold
+                if(confident):
+                    print("CONFIDENT")
+                    print("SCORE CHAT RESPONSE: ", Decimal(best_score))
+                    break
+        
+        return response
+
+
+    def get_chat_response_from_model(self, user_query):
+        print("RESPONDING FROM MODEL")
+
+        # Generic words
+        stops = stopwords.words('english')
+        # used to reduce word to its lemma
+        stemmer = SnowballStemmer('english')
+
+        myDict = {'USER_QUERY' : user_query}
+        df = DataFrame(list(myDict.items()),columns = ['USER QUERY','Question'])
+
+        # Clean up data by removing stop words and reduce others to their lemma
+        df['cleaned'] = df['Question'].apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
+
+        user_query = df.cleaned[0]
+
+        print("USER CLEANED:", user_query)
+
+
+        # Predict answer from the model
+        response = str(self.kb.chat_model.predict([user_query]))
+        # Format string
+        response = response.replace('[', '').replace(']','').replace('\'', '').replace('"','')
+        return response
+
+

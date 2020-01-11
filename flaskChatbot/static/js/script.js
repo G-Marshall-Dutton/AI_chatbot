@@ -92,16 +92,19 @@ sendMessage = () => {
                     </div>`
            
                 );
+
+                var ticket =  $(".ticket")
+                ticket.after(
+                    `
+                    <div class='button-row'>
+                        <a href = '`+ data.answer.pageUrl + `' class = 'btn bg-warning' target='blank'> Book Now </a>
+                    </div>
+                    <div class="response"></div>
+                    `
+                )
             }
 
-            var ticket =  $(".ticket")
-            ticket.after(
-                `
-                <div class='button-row'>
-                    <a href = '`+ data.answer.pageUrl + `' class = 'btn bg-warning' target='blank'> Book Now </a>
-                </div>
-                `
-            )
+
 
             updateScroll();
 

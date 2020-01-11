@@ -1,20 +1,22 @@
 from webScraper import webScraper
-from delay_prediction import delays
+from delay_prediction.DelayController import DelayController
+import random
 
 class ConversationController():
     def __init__(self, nlp):
 
         self.scraper = webScraper.webScraper()
-
-
-        # Chat : Booking : Delay 
+        self.delay_controller = DelayController()
         self.nlp = nlp
+
         self.context = None
+        
+        # Chat : Booking : Delay 
         self.state = {
             'from': None,
             'to': None,
             'date': None,
-            'time': '1400',   
+            'time': None,   
         }
 
         self.print_state
@@ -35,6 +37,9 @@ class ConversationController():
         self.delay_confirmed = False
         self.awaiting_delay_confirmation = False
 
+        self.lock_booking = False
+        self.lock_delay = False
+
 
     # Updates state 
     def update_state(self, newInfo):
@@ -53,12 +58,24 @@ class ConversationController():
         for k, v in self.state.items():
             print(k, v)
 
+    # Prints delay state
+    def print_delay_state(self):
+        for k, v in self.delay_state.items():
+            print(k, v)
+
     # Resets state values to 'None'
     def reset_state(self):
         print("RESETING STATE...")
         for k, v in self.state.items():
             self.state[k] = None
         self.print_state()
+
+    # Resets state values to 'None'
+    def reset_delay_state(self):
+        print("RESETING STATE...")
+        for k, v in self.delay_state.items():
+            self.delay_state[k] = None
+        self.print_delay_state()
         
     # Extracts state relevant info and updates state
     def extract_info(self, user_query):
@@ -75,11 +92,19 @@ class ConversationController():
             # Reset context
             self.context = None
 
+            # Reset state
+            self.state_confirmed = False
+            self.awaiting_confirmation = False
+
             # web scrape info 
             response = self.getTicket()
+
+            # Reset state
+            self.reset_state()
+
             return response
 
-        elif not self.state_confirmed and self.awaiting_confirmation:
+        elif self.awaiting_confirmation:
             # Reset state
             self.reset_state()
             self.awaiting_confirmation = False
@@ -94,16 +119,18 @@ class ConversationController():
             print("None in self.state")
             # Acquire more info
             if self.state['to'] is None:
-                response = "Where are you traveling to?"
+                response = 'Sure! ' + random.choice(self.nlp.kb.to_responses)
 
             elif self.state['from'] is None:
-                response = "Where are you traveling from?"
+                response = random.choice(self.nlp.kb.from_responses)
 
             elif self.state['date'] is None:
-                response = "What date do you want to travel?"
+                self.lock_booking = True
+                response = random.choice(self.nlp.kb.date_responses)
 
             elif self.state['time'] is None:
-                response = "What time would you like to leave?"
+                self.lock_booking = True
+                response = random.choice(self.nlp.kb.dep_time_responses)
 
             return response
 
@@ -111,6 +138,7 @@ class ConversationController():
         # elif not self.state_confirmed:
         else:
             # Return confirmation message
+            self.lock_booking = False
             self.awaiting_confirmation = True
             return "So you want to travel from %s to %s on the %s at %s?" % (self.state['from'], self.state['to'], self.state['date'], self.state['time'])
  
@@ -124,12 +152,18 @@ class ConversationController():
             # Reset context
             self.context = None
 
+            # Reset delay confirmation
+            self.delay_confirmed = False
+            self.awaiting_delay_confirmation = False
+
             # DELETE THIS WHEN INFO IS BEING CONVERTED PROPERLY TO STATION CODES
             self.delay_state['to'] = 'LIVST'
             self.delay_state['from'] = 'NRCH'
 
             # Predict delay
-            response = delays.getEstimatedArrivalTimeV1(self.delay_state)
+            response = self.delay_controller.get_delay(self.delay_state)
+
+            self.reset_delay_state()
             return response
 
         # If delay_state is not full
@@ -138,21 +172,24 @@ class ConversationController():
             print("None in self.delay_state")
             # Acquire more info
             if self.delay_state['to'] is None:
-                response = "Where are you traveling to?"
+                response = 'Let me try and help. ' + random.choice(self.nlp.kb.delay_to_responses)
 
             elif self.delay_state['from'] is None:
-                response = "Where are you traveling from?"
+                response = random.choice(self.nlp.kb.from_responses)
 
             elif self.delay_state['planned_dep_time'] is None:
-                response = "When were you supposed to leave?"
+                self.lock_delay = True
+                response = random.choice(self.nlp.kb.delay_dep_time_responses)
 
             elif self.delay_state['delay_mins'] is None:
-                response = "Roughly how long have you been delayed?"
+                self.lock_delay = True
+                response = random.choice(self.nlp.kb.delayed_by_responses)
 
             return response
 
         else:
             # Return confirmation message
+            self.lock_delay = False
             self.awaiting_delay_confirmation = True
             return "So you are traveling from %s to %s. You we're supposed to leave at %s and have been delayed roughly %s minutes so far?" % (self.delay_state['from'], self.delay_state['to'], self.delay_state['planned_dep_time'], self.delay_state['delay_mins'])
 
@@ -165,8 +202,7 @@ class ConversationController():
         # If we're waiting on ticket info confirmation
         if(self.awaiting_confirmation):
             print(user_query)
-            
-            # NEED TO SWAP THIS FOR NLP
+
             if(self.nlp.affirmation(user_query)):
                 self.state_confirmed = True
                 self.context = "booking"
@@ -182,7 +218,7 @@ class ConversationController():
             print(user_query)
             
             # NEED TO SWAP THIS FOR NLP
-            if(user_query == "yes"):
+            if(self.nlp.affirmation(user_query)):
                 self.delay_confirmed = True
                 self.context = "delay"
                 print("CONFIRMED")
@@ -191,13 +227,40 @@ class ConversationController():
                 self.context = "delay" 
                 print("NOT CONFIRMED") 
 
-        # WILL NEED TO CHANGE THIS BACK TO 'ELSE' (if we can find a different way to stay in delay self.context)
-        elif(self.context == None or self.context == 'chat'):
+        # Stay in booking state if locked
+        elif(self.lock_booking):
+            self.context = 'booking'
+
+        # Stay in delay state if locked
+        elif(self.lock_delay):
+            self.context ='delay'
+
+        # If user is responding with YES - and not awaiting confirmation
+        elif(self.nlp.affirmation(user_query)):
+            print("AFFIRMATION")
+            self.context = 'chat'
+         # If user is responding with NO - and not awaiting confirmation
+        elif(self.nlp.refutation(user_query)):
+            print("REFUTATION")
+            self.context = 'chat'
+
+
+        else:
+            # Store previous context
+            prev_context = self.context
+
             # Recieve self.context from NLP : 'chat' , 'booking' , 'delay'
             self.context = self.nlp.classify_user_sentence(user_query)
+
+            # Dont allow swap from booking to delay
+            if(prev_context == 'booking' and self.context == 'delay'):
+                self.context = 'booking'
+            elif(prev_context == 'delay' and self.context == 'booking'):
+                self.context = 'delay'
+            
             print('DETERMINING self.context...')
             print('self.context:', self.context)
-
+ 
         if self.context is "booking": 
 
             # Get info from NLP
@@ -208,6 +271,7 @@ class ConversationController():
 
             # determine appropriate response
             response = self.determine_train_response()
+            
             print('RESPONSE:', response)
 
         elif self.context is "delay":
@@ -224,7 +288,7 @@ class ConversationController():
 
         else:
             # determine appropriate response
-            response = "General chit chat"
+            response = self.nlp.get_chat_response_from_model(user_query)
         
         return response
 
