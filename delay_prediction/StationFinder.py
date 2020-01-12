@@ -1,10 +1,16 @@
 import csv
 from pathlib import Path
 from difflib import SequenceMatcher
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
 
-# string comparison function
+# # string comparison function (old, basic)
+# def similar(a, b):
+#     return SequenceMatcher(None, a, b).ratio()
+
+# # use fuzzywuzzys token_set_ratio 
 def similar(a, b):
-    return SequenceMatcher(None, a, b).ratio()
+    return fuzz.token_set_ratio(a, b)
 
 class StationFinder:
     # class attributes - empty dictionaries
@@ -99,21 +105,21 @@ class StationFinder:
 
         return self.codeToStationDict[best_key]
 
-#TEST CODE
-#sf = StationFinder()
+# #TEST CODE
+# sf = StationFinder()
 
 # while(True):
 #     # get user input
 #     userInput = input("Input for Station Finder > ")
 
 #     # TEST FOR GET CODE
-#     #print(sf.getCode(userInput))
+#     print(sf.getCode(userInput))
 
-#     # TEST FOR GET STATION
-#     print(sf.getStation(userInput))
+# #     # TEST FOR GET STATION
+# #     print(sf.getStation(userInput))
 
-# TEST FOR GET SHORTCODE
-    # print(sf.getShortCode(userInput))
+# # TEST FOR GET SHORTCODE
+#     # print(sf.getShortCode(userInput))
 
 
 
