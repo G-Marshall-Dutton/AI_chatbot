@@ -87,3 +87,19 @@ TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value
 0.7490942028985508
 TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value) c=
 0.7676630434782609
+TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value) c=
+0.7364130434782609
+TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value) c=
+0.7432065217391305
+TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value) c=
+0.7558876811594203
+TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value) c=
+0.7572463768115942
+TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value) c=
+0.7658514492753623
+TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value) c=
+0.7540760869565217
+TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value) c=
+0.7663043478260869
+TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value) c=
+0.7703804347826086

@@ -5,8 +5,11 @@ from urllib.request import urlopen
 from webScraper import webScraper
 from nlp import nlp
 from controller import controller
+
 from VoiceControl import VoiceControl
 
+import os
+from gtts import gTTS
 
 #Create flask shell
 app = Flask(__name__)
@@ -55,17 +58,40 @@ def index():
 @app.route("/chat", methods=['POST'])
 def chat():
     
+    
+
     # Reset status
     status = ''
 
     #Read in userInput as string
     userInput = request.get_json()['userMessage']
 
+    # Active voice responses
+    if(userInput == 'VOICE-ACTIVE'):
+        controller.voiceActive = True
+        return True
+
+    # Active voice responses
+    if(userInput == 'VOICE-UNACTIVE'):
+        controller.voiceActive = False
+        return True
+
     if(userInput == 'VOICE'):
         userInput = voice_listener.listen()
         print("HEARD:", userInput)
         response = controller.respond(userInput)
+        string_response = isinstance(response, str )
+        # Save response as MP3
+        tts = gTTS(text=response, lang='en')
+        tts.save("response.mp3")
+
         response = make_response(jsonify({"answer": response, "question": userInput, "status" : "voiceChat"}), 200)
+
+        # Play audio if voice active
+        if(controller.voiceActive and string_response):
+            # Play response.mp3 audio
+            os.system("mpg321 response.mp3")
+
         return response
 
     # Pass the user input to the controller : respond deals with connection to NLP
@@ -75,13 +101,25 @@ def chat():
     # Determine if its a normal response or the scraped ticket info
     # Normal response
     if(isinstance(response, str )):
+        str_response = True
         status = "ticketChat" 
+        # Save response as MP3
+        tts = gTTS(text=response, lang='en')
+        tts.save("response.mp3")
+
+
     # Ticket info (stored in a dict)
     elif(isinstance(response, dict )):
+        str_response = False
         status = "ticketInfo"
 
-
+    
     response = make_response(jsonify({"answer": response, "status" : status}), 200)
+
+    if(status == "ticketChat" and controller.voiceActive):
+        # Play response.mp3 audio
+        os.system("mpg321 response.mp3")
+
     return response
     
 

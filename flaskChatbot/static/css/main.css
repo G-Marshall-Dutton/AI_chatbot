@@ -100,8 +100,21 @@ body::before {
 }
 .chatbot-modal a:hover{
     color: black!important;
+    background-color: rgb(208, 119, 10);
 }
 
+.mic {
+    flex: 0.5!important
+}
+
+.speaker {
+    flex: 0.5!important;
+    background-color: #5a6067!important
+}
+
+.speaker .fa-volume-up{
+    display: none;
+}
 
 .message-right {
     display: flex;

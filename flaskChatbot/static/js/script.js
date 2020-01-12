@@ -5,6 +5,53 @@ function updateScroll(){
     objDiv.scrollTop = objDiv.scrollHeight;
 }
 
+var text_to_speech = false;
+
+// Sets text to speech active
+activateTextToVoice = () => {
+
+    if(text_to_speech == false){
+        $(".fa-volume-mute").css({"display":"none"})
+        $(".fa-volume-up").css({"display":"block"})
+        $(".speaker").attr('style', 'background-color:green!important')
+        text_to_speech = true;
+
+
+        $.ajax({
+
+            url: "/chat",
+            type: 'POST',
+            data: JSON.stringify({ userMessage: 'VOICE-ACTIVE', }),
+            contentType: 'application/json',
+            success: function(data){
+                console.log("Activating voice")
+
+            }   
+        })
+    }
+    else{
+        $(".fa-volume-mute").css({"display":"block"})
+        $(".fa-volume-up").css({"display":"none"})
+        $(".speaker").attr('style', 'background-color:#5a6067!important')
+        text_to_speech = false;
+
+        $.ajax({
+
+            url: "/chat",
+            type: 'POST',
+            data: JSON.stringify({ userMessage: 'VOICE-UNACTIVE', }),
+            contentType: 'application/json',
+            success: function(data){
+                console.log("Deactivating voice")
+    
+            }   
+        })
+    }
+
+
+
+}
+
 activateVoice = () => {
     // Display chat bot message
     $.ajax({
@@ -72,7 +119,7 @@ sendMessage = () => {
             if(data.status == "ticketChat"){
                 // Write PaPa message bubble
                 lastMessage.after(
-                    "<div class='response message-left '>  <p class='bg-primary'> "+data.answer+" </p>  </div>"
+                    "<div class='response message-left'>  <p class='bg-primary'> "+data.answer+" </p>  </div>"
                 );
             }
             else{
@@ -202,6 +249,11 @@ $(document).ready(()=>{
 
     // Actives voice recognition
     $(".voice-control").click(()=>activateVoice())
+
+    // Actives text to voice recognition
+    $(".speaker").click(()=>activateTextToVoice())
+
+
 })
 
 // JQUERY END --------------------------------------------------

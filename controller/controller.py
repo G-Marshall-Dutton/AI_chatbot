@@ -2,6 +2,8 @@ from webScraper import webScraper
 from delay_prediction.DelayController import DelayController
 from delay_prediction.StationFinder import StationFinder
 import random
+from datetime import datetime
+import dateparser
 
 class ConversationController():
     def __init__(self, nlp):
@@ -12,6 +14,8 @@ class ConversationController():
         self.sf = StationFinder()
 
         self.context = None
+
+        self.voiceActive = False
         
         # Chat : Booking : Delay 
         self.state = {
@@ -142,7 +146,9 @@ class ConversationController():
             # Return confirmation message
             self.lock_booking = False
             self.awaiting_confirmation = True
-            return "So you want to travel from %s to %s on the %s at %s?" % (self.sf.getStation(self.state['from']), self.sf.getStation(self.state['to']), self.state['date'], self.state['time'])
+            date = datetime.strptime( self.state['date'][0:4] + '20' + (self.state['date'])[4:6], '%d%m%Y')
+            date = date.strftime("%d %B, %Y")
+            return "So you want to travel from %s to %s on the %s at %s?" % (self.sf.getStation(self.state['from']), self.sf.getStation(self.state['to']), date, self.state['time'])
  
  
     # Determine delay specific response based on self.delay_state
