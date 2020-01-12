@@ -1,0 +1,71 @@
+TESTING CHAT_CLASSIFIER - BASE LINE ( ngramanalyzer='word' ngram_range=(1,1) )
+0.677536231884058
+
+TESTING CHAT_CLASSIFIER - ngramanalyzer='char' ngram_range=(1,1)
+0.3179347826086957
+
+
+TESTING CHAT_CLASSIFIER - ngramanalyzer='char' ngram_range=(1,2)
+0.7169384057971014
+
+TESTING CHAT_CLASSIFIER - ngramanalyzer='char' ngram_range=(1,3)
+0.7563405797101449
+
+TESTING CHAT_CLASSIFIER - ngramanalyzer='char' ngram_range=(1,4) - BEST (new base line)
+0.7776268115942029
+
+TESTING CHAT_CLASSIFIER - ngramanalyzer='char' ngram_range=(1,5)
+0.7649456521739131
+
+----------
+
+
+
+TESTING CHAT_CLASSIFIER - removed stop words
+0.7576992753623188
+
+----------
+
+
+TESTING CHAT_CLASSIFIER - changing k best features k=2000
+0.04030797101449275
+
+
+TESTING CHAT_CLASSIFIER - changing k best features k=8000
+0.5267210144927537
+
+TESTING CHAT_CLASSIFIER - changing k best features k=13000
+0.7576992753623188
+
+---------
+
+TESTING CHAT_CLASSIFIER - changing penalty type - 'l1'
+0.7305253623188406
+
+TESTING CHAT_CLASSIFIER - changing penalty type - 'l1' (increased interations to 10000 as it failed to converge)
+0.7291666666666666
+---------
+
+
+TESTING CHAT_CLASSIFIER - changing sublinear_tf=False
+0.759963768115942
+
+
+--------
+
+
+TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value) c=0.5
+0.7531702898550725
+
+TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value) c=1.0
+0.761322463768116
+
+TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value) c=2.0
+0.759963768115942
+
+
+--------
+TESTING CHAT_CLASSIFIER - Dual=True
+0.7604166666666666 
+TESTING CHAT_CLASSIFIER - changing Regularization parameter (linearSVC 'c' value) c=
+0.7604166666666666

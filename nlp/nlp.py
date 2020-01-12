@@ -43,7 +43,7 @@ class ReasoningEngine:
          "Well, that's awesome for someone like you", "I don't have the time nor the crayons to explain this to you.")
 
     def get_random_greeting(self):
-        greeting = random.choice(self.GREETINGS) + ". I'm Thomas! I can help you with cheap train tickets and estimated arrival times but you can ask me anything and I'll give you my best answer! So how can help you?"
+        greeting = random.choice(self.GREETINGS) + ". I'm Thomas! I can help you with cheap train tickets and estimated arrival times, but you can ask me anything and I'll give you my best answer! So how can help?"
         return greeting
 
     def get_random_response(self):
@@ -60,7 +60,7 @@ class ReasoningEngine:
             days = elements[0]
             print(days)
 
-        # user dateparser to parse the date into a python datetime
+        # user dateparser to parse the date into a python datetime, prefering futrue dates if ambiguous 
         parsed_date = dateparser.parse(d,settings={'PREFER_DATES_FROM': 'future'})
 
         if(days_found):
