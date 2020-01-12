@@ -85,7 +85,7 @@ class KnowledgeBase():
 
         #self.readCSV()
         self.readTSV()
-        self.chat_model = self.trainModel()
+        #self.chat_model = self.trainModel()
 
 
 
