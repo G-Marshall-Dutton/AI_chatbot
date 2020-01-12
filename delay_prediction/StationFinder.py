@@ -4,13 +4,13 @@ from difflib import SequenceMatcher
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 
-# # string comparison function (old, basic)
-# def similar(a, b):
-#     return SequenceMatcher(None, a, b).ratio()
-
-# # use fuzzywuzzys token_set_ratio 
+# string comparison function (old, basic)
 def similar(a, b):
-    return fuzz.token_set_ratio(a, b)
+    return SequenceMatcher(None, a, b).ratio()
+
+# # # use fuzzywuzzys token_set_ratio 
+# def similar(a, b):
+#     return fuzz.token_set_ratio(a, b)
 
 class StationFinder:
     # class attributes - empty dictionaries

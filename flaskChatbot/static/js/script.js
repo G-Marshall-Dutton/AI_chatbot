@@ -5,6 +5,38 @@ function updateScroll(){
     objDiv.scrollTop = objDiv.scrollHeight;
 }
 
+activateVoice = () => {
+    // Display chat bot message
+    $.ajax({
+
+        url: "/chat",
+        type: 'POST',
+        data: JSON.stringify({ userMessage: 'VOICE'}),
+        contentType: 'application/json',
+        success: function(data){
+            console.log(data)
+            // Get last message sent
+            var lastMessage = $(".response:last-of-type")
+            if(data.status == "voiceChat"){
+                // Write PaPa message bubble
+                lastMessage.after(
+                    "<div class='response message-right '>  <p class='bg-success'> "+data.question+" </p>  </div>"
+                );
+
+                lastMessage = $(".response:last-of-type")
+                
+                // Write PaPa message bubble
+                lastMessage.after(
+                    "<div class='response message-left '>  <p class='bg-primary'> "+data.answer+" </p>  </div>"
+                );
+
+                updateScroll();
+
+            }
+
+        }   
+    })
+}
 
 
 sendMessage = () => {
@@ -167,6 +199,9 @@ $(document).ready(()=>{
 
     // Sends alternating messages on clicking 'send' /chatbot.html
     $(".send-btn").click(()=>sendMessage())
+
+    // Actives voice recognition
+    $(".voice-control").click(()=>activateVoice())
 })
 
 // JQUERY END --------------------------------------------------

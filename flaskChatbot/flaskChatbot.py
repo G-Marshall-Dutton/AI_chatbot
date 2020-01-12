@@ -5,7 +5,7 @@ from urllib.request import urlopen
 from webScraper import webScraper
 from nlp import nlp
 from controller import controller
-
+from VoiceControl import VoiceControl
 
 
 #Create flask shell
@@ -14,7 +14,7 @@ app = Flask(__name__)
 # Initialize components (Controller, Reasoning Engine, Language Processing)
 nlp = nlp.ReasoningEngine()
 controller = controller.ConversationController(nlp)
-
+voice_listener = VoiceControl.VoiceControl()
 
 
 
@@ -49,6 +49,8 @@ def index():
     # render page
     return render_template('index.html')
 
+
+
 # Endpoint for communication... recieving and sending responses
 @app.route("/chat", methods=['POST'])
 def chat():
@@ -58,6 +60,13 @@ def chat():
 
     #Read in userInput as string
     userInput = request.get_json()['userMessage']
+
+    if(userInput == 'VOICE'):
+        userInput = voice_listener.listen()
+        print("HEARD:", userInput)
+        response = controller.respond(userInput)
+        response = make_response(jsonify({"answer": response, "question": userInput, "status" : "voiceChat"}), 200)
+        return response
 
     # Pass the user input to the controller : respond deals with connection to NLP
     response = controller.respond(userInput)
