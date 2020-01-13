@@ -180,6 +180,55 @@ class DatabaseQuerier:
         self.closeConnection()
         return records
 
+    def getDataOnStation(self, station, limit):
+        # Open Connection
+        self.openConnection()
+
+        if limit is None:
+            limit = ""
+        else:
+            limit = "LIMIT " + str(limit)
+
+        query = """
+                    SELECT rid,tpl,prev_station_ptd, prev_station_dep_at,pta,arr_et AS arr_at,ptd,dep_at, monthnum, dayofweek, peak FROM features_4
+                    WHERE tpl = '{0}'
+                    AND prev_station_ptd IS NOT NULL
+                    AND prev_station_dep_at IS NOT NULL
+                    AND pta IS NOT NULL
+                    AND arr_et IS NOT NULL
+                    AND (ptd IS NOT NULL OR tpl = 'LIVST')
+                    AND (dep_at IS NOT NULL OR tpl = 'LIVST')
+                    ORDER BY rid """.format(station) + limit
+
+        # Execute query and get results
+        return sqlio.read_sql_query(query, self.connection)
+
+    def testClassificationData(self, fromStation, toStation, limit):
+        # Open Connection
+        self.openConnection()
+
+        if limit is None:
+            limit = ""
+        else:
+            limit = "LIMIT " + str(limit)
+
+        query = """
+                    SELECT rid,tpl,ptd,dep_at,tpl_to,arr_at,monthnum,dayofweek,peak FROM
+                        (SELECT rid,tpl,ptd,dep_at, monthnum, dayofweek,peak FROM features_4 
+                        WHERE tpl = '{0}'
+                        AND dep_at IS NOT NULL
+                        AND ptd IS NOT NULL
+                        ) AS x
+                        JOIN
+                        (SELECT rid AS rid_to,tpl AS tpl_to,pta,arr_et AS arr_at FROM features_4
+                        WHERE tpl = '{1}'
+                        AND arr_et IS NOT NULL
+                        AND pta IS NOT NULL
+                        ) AS y on x.rid = y.rid_to
+                    ORDER BY rid """.format(fromStation,toStation) + limit
+
+        # Execute query and get results
+        return sqlio.read_sql_query(query, self.connection)
 
     #######################################################
     ############################################################
