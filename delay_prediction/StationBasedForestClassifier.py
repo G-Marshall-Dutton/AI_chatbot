@@ -300,6 +300,21 @@ class StationBasedForestRegressor:
 
         user_travelling_from = features['from']
         user_travelling_to = features['to']
+
+        # check for valid route, stations
+        to_index = None
+        from_index = None
+        i = 0
+        for st in self.route:
+            if st == user_travelling_to:
+                to_index = i
+            elif st == user_travelling_from:
+                from_index = i
+            i = i + 1
+
+        if (to_index is None) or (from_index is None) or from_index > to_index:
+            return None
+
         user_planned_depature_time = datetime.datetime.strptime(features['planned_dep_time'], "%H%M")
         user_planned_depature_time_s = (user_planned_depature_time - user_planned_depature_time.replace(hour=0, minute=0, second=0,
                                                                                          microsecond=0)).total_seconds()
