@@ -66,6 +66,7 @@ class KnowledgeBase():
 
         ]
 
+        # Dont delete this. Needed for chat responses
         self.chatKnowledge = {
 
         }
@@ -85,7 +86,8 @@ class KnowledgeBase():
 
         #self.readCSV()
         self.readTSV()
-        self.chat_model = self.trainModel()
+        #self.chat_model = self.trainModel()
+        self.trainContextModels()
 
 
 
@@ -219,3 +221,67 @@ class KnowledgeBase():
 
 
         # 74.33% - (1,1) , 'all' , max_iter=7000
+
+    def trainContextModels(self):
+        with open('context_results.csv', mode='a') as results:
+            results_writer = csv.writer(results, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            results_writer.writerow(["TESTING CONTEXT_CLASSIFIER -"])
+
+            # ---
+
+            print('BUILDING MODEL...')
+            data = pd.read_csv('contextExamples.csv')
+
+            # Read all data into pandas DataFrame
+            data1 = pd.read_csv('context_chitchat_witty.csv')
+
+
+            # Read additional data into pandas DataFrame
+            data2 = pd.read_csv('context_QA.csv')
+
+
+            # Combine datasets
+            data = pd.concat([data, data1])
+            data = pd.concat([data, data2])
+
+            # Generic words
+            stops = stopwords.words('english')
+            # used to reduce word to its lemma
+            stemmer = SnowballStemmer('english')
+
+            # Clean up data by removing stop words and reduce others to their lemma
+            data['cleaned'] = data['Question'].apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
+
+            # Split data into training and testing sets
+            X_train, X_test, y_train, y_test = train_test_split(data['cleaned'], data.Answer, test_size=0.2)
+
+            # Initialise training pipeline
+            #
+            # TfidVectorizer() : Vectorises each training example. Also applies a weight to each word, high weighting form uncommon words, low weighting for common words
+            #                    ngrem_range(1, 2) - Compares each word individually as well as pairs of consecutive words
+            #
+            # SelectKBest()    : Decides on the best features in our data by determining the level of dependancy those features have on one another. 
+            #                    Features with low dependancies are assigned a higher weighting than those with high dependancies.
+            #                    Uses chi2 ('chi squared') algorithm to determine k best features
+            #
+            # LinearSVC()      : This is the classifier
+            # pipeline = Pipeline([('vect', TfidfVectorizer(ngram_range=(1, 1), stop_words="english", sublinear_tf=True, analyzer = 'word')), 
+            #                     ('chi',  SelectKBest(chi2, k='all')),
+            #                     ('clf', LinearSVC(C=1.5, penalty='l2', max_iter=7000, dual=False))])
+
+            pipeline = Pipeline([('vect', TfidfVectorizer(ngram_range=(1, 4), stop_words="english", sublinear_tf=True, analyzer = 'char')), 
+                                ('chi',  SelectKBest(chi2, k='all')),
+                                ('clf', LinearSVC(C=1.5, penalty='l2', max_iter=7000, dual=False))])
+
+
+
+            model = pipeline.fit(X_train, y_train)
+            print('MODEL BUILT.')
+            print('TESTING ACCURACY...')
+            accuracy = model.score(X_test, y_test)       
+            print('ACCURACY:', accuracy)
+            #input('PRESS ENTER TO CONTINUE...')
+
+            #results_writer.writerow([accuracy])
+
+        return model
