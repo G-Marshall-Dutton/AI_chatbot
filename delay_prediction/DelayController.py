@@ -1,17 +1,23 @@
-from delay_prediction.KNN_Classifier import KNN_Classifier
-from delay_prediction import DatabaseQuerier
+from delay_prediction.StationBasedForestClassifier import StationBasedForestRegressor
+from delay_prediction.delays import secondsToTime
+from joblib import dump, load
 
 class DelayController:
 
     def __init__(self):
         # Initialise best classifier
-        self.classifier = KNN_Classifier()
-        self.classifier.buildClassifier(DatabaseQuerier.DatabaseQuerier().getAllTrains("NRCH","DISS",100))
+        self.classifier = load('classifier.joblib')
+        self.classifierb = load('classifier_updated.joblib')
 
     def get_delay(self, user_information):
         delay = self.classifier.classifyInstance(user_information)
-        return delay
+        delayb = self.classifierb.classifyInstance(user_information)
+        return delay,delayb
 
 if __name__ == "__main__":
     dc = DelayController()
-    print(dc.get_delay({"to":"DISS", "from":"NRCH", "planned_dep_time":"1630", "delay_mins":0}))
+    print("done")
+    a,b = dc.get_delay({"to":"LIVST", "from":"IPSWICH", "planned_dep_time":"2000", "delay_mins":0})
+    print(secondsToTime(a), secondsToTime(b))
+    a, b = dc.get_delay({"to": "LIVST", "from": "IPSWICH", "planned_dep_time": "2000", "delay_mins": 5})
+    print(secondsToTime(a),secondsToTime(b))

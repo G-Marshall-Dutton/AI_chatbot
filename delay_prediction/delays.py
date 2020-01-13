@@ -1,5 +1,6 @@
 import datetime
 
+
 ###
 
 ###############################################
@@ -47,23 +48,63 @@ import datetime
 ###############################################
 
 
-
 # Get day as integer as string
 def dayIndexToString(index):
     switcher = {
-        0: "mon",
-        1: "tues",
-        2: "weds",
-        3: "thurs",
-        4: "fri",
-        5: "sat",
-        6: "sun",
+        0: "Mon",
+        1: "Tues",
+        2: "Weds",
+        3: "Thurs",
+        4: "Fri",
+        5: "Sat",
+        6: "Sun",
     }
-    return switcher.get(index, "Invalid day")
+    return switcher.get(index, "Invalid index")
+
+
+# Get day as integer as string
+def monthIndexToString(index):
+    switcher = {
+        1: "Jan",
+        2: "Feb",
+        3: "March",
+        4: "April",
+        5: "May",
+        6: "June",
+        7: "July",
+        8: "Aug",
+        9: "Sept",
+        10: "Oct",
+        11: "Nov",
+        12: "Dec",
+    }
+    return switcher.get(index, "Invalid index")
+
+
+# Get day as integer as string
+def peakIndexToString(index):
+    switcher = {
+        0: "Off-Peak",
+        1: "Peak",
+    }
+    return switcher.get(index, "Invalid index")
+
+
+def isPeak(time_seconds):
+    morn_peak_start = 23400  # 06:30
+    morn_peak_end = 34200  # 09:30
+    eve_peak_start = 57600  # 16:00
+    eve_peak_end = 68400  # 19:00
+    if (time_seconds > morn_peak_start and time_seconds < morn_peak_end) or (
+            time_seconds > eve_peak_start and time_seconds < eve_peak_end):
+        return 1
+    return 0
+
 
 # Get datetime from seconds
 def secondsToTime(seconds):
     return str(datetime.timedelta(seconds=seconds))
+
 
 # actual value, predicted value, largest difference allowed to be considered accurate
 def isAccurate(actual, prediction, maxError):
@@ -72,6 +113,7 @@ def isAccurate(actual, prediction, maxError):
     else:
         return False
 
+
 # Get the date of journey from its rid
 def getDateFromRID(rid):
     date_string = rid[0:8]
@@ -79,9 +121,9 @@ def getDateFromRID(rid):
     return date
 
 
-    
 
 
-    
+
+
 
 
