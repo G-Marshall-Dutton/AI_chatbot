@@ -58,8 +58,6 @@ def index():
 @app.route("/chat", methods=['POST'])
 def chat():
     
-    
-
     # Reset status
     status = ''
 

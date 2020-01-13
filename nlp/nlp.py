@@ -37,7 +37,7 @@ class ReasoningEngine:
         # Sentences we'll respond with if the user greeted us
         self.kb = KnowledgeBase.KnowledgeBase()
         self.similarityThreshold = 0.05
-        self.context_similarity_threshold = 0.15
+        self.context_similarity_threshold = 0.3 # this was 0.15
         self.GREETINGS = ("Hello", "Hi", "Greetings")
         self.RESPONSES = ("... my day was fine thank for asking... *rolls eyes*", "WHY DO YOU ALWAYS JUST TALK AT ME", "It would be nice if you just listened to me for once...",
          "Well, that's awesome for someone like you", "I don't have the time nor the crayons to explain this to you.")
@@ -404,8 +404,9 @@ class ReasoningEngine:
                 formatted_time = self.convert_time(ent.text)
                 dict.update({"time": formatted_time}) 
 
+
         # if everything else is found except time and NER isn't picking it up, detect nums and dateparse them + neighbour
-        if(dict.get("from") is not None and dict.get("to") is not None and dict.get("date") is not None):
+        if(dict.get("from") is not None and dict.get("to") is not None and dict.get("date") is not None and dict.get('time') is None):
             for token in doc:
                 if token.pos_ is "NUM":
                     new_time = token.text + token.nbor(1).text
@@ -539,7 +540,7 @@ class ReasoningEngine:
                     dict.update({"delay_mins": token.text}) 
 
         # if everything else is found except time and NER isn't picking it up, detect nums and dateparse them + neighbour
-        if(dict.get("from") is not None and dict.get("to") is not None and dict.get("delay_mins") is not None):
+        if(dict.get("from") is not None and dict.get("to") is not None and dict.get("delay_mins") is not None and dict.get('planned_dep_time') is None):
             for token in doc:
                 if token.pos_ is "NUM":
                     new_time = token.text + token.nbor(1).text

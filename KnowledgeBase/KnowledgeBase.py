@@ -85,7 +85,7 @@ class KnowledgeBase():
 
         #self.readCSV()
         self.readTSV()
-        #self.chat_model = self.trainModel()
+        self.chat_model = self.trainModel()
 
 
 
@@ -212,7 +212,7 @@ class KnowledgeBase():
             print('ACCURACY:', accuracy)
             #input('PRESS ENTER TO CONTINUE...')
 
-            results_writer.writerow([accuracy])
+            #results_writer.writerow([accuracy])
 
         return model
 

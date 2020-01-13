@@ -164,14 +164,26 @@ class ConversationController():
             self.delay_confirmed = False
             self.awaiting_delay_confirmation = False
 
-            # DELETE THIS WHEN INFO IS BEING CONVERTED PROPERLY TO STATION CODES
-            self.delay_state['to'] = 'LIVST'
-            self.delay_state['from'] = 'NRCH'
+            # Convert 'London' into station code (London is edge case, dont need to do this for other stations)
+            if(self.delay_state['from'] == 'London'):
+                self.delay_state['from'] = 'LIVST'
+            elif(self.delay_state['to'] == 'London'):
+                self.delay_state['to'] = 'LIVST'
+
 
             # Predict delay
             response = self.delay_controller.get_delay(self.delay_state)
 
             self.reset_delay_state()
+            return response
+
+        elif self.awaiting_delay_confirmation:
+            # Reset state
+            self.reset_delay_state()
+            self.awaiting_delay_confirmation = False
+
+            # Return reset message 
+            response = "Let's start again... \nWhere are you traveling to?"
             return response
 
         # If delay_state is not full
