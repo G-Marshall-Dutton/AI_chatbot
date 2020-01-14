@@ -103,7 +103,7 @@ def isPeak(time_seconds):
 
 # Get datetime from seconds
 def secondsToTime(seconds):
-    return str(datetime.timedelta(seconds=seconds))
+    return str(datetime.timedelta(seconds=seconds))[0:8]
 
 
 # actual value, predicted value, largest difference allowed to be considered accurate

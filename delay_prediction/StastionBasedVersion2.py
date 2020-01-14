@@ -15,7 +15,7 @@ from delay_prediction.delays import secondsToTime
 from delay_prediction.delays import isAccurate
 
 
-class StationBasedForestRegressor:
+class StationBasedVersion2:
 
     def __init__(self):
         self.route = ["NRCH","DISS","STWMRKT","IPSWICH","MANNGTR","CLCHSTR","STFD","LIVST"]
@@ -44,7 +44,7 @@ class StationBasedForestRegressor:
 
             # Initialise dataframe
             classification_data = pandas.DataFrame(
-                columns=["prev_station_planned_dep", "prev_station_delay", "month ", "day", "peak", "arrival_time", "ptd",
+                columns=["prev_station_delay", "month", "day", "hour", "peak", "previous_journey_length","time_spent_at_station",
                          "dep_delay"])
 
             inputData.ptd.fillna(value=pandas.np.nan, inplace=True)
@@ -58,10 +58,8 @@ class StationBasedForestRegressor:
                 data = row[1]
                 prev_station_dep = datetime.datetime.strptime(data[0][0:8], "%Y%m%d")
                 prev_station_dep = datetime.datetime.combine(prev_station_dep, data[3])
-
                 prev_station_ptd = datetime.datetime.strptime(data[0][0:8], "%Y%m%d")
                 prev_station_ptd = datetime.datetime.combine(prev_station_ptd, data[2])
-
                 prev_station_delay = prev_station_dep - prev_station_ptd
 
                 month = data[8]
@@ -70,6 +68,10 @@ class StationBasedForestRegressor:
 
                 arrival_time = datetime.datetime.strptime(data[0][0:8], "%Y%m%d")
                 arrival_time = datetime.datetime.combine(arrival_time, data[5])
+                hour = arrival_time.hour
+
+                previous_journey_length = arrival_time - prev_station_dep
+
 
 
                 if station != "LIVST":
@@ -81,11 +83,13 @@ class StationBasedForestRegressor:
 
                     dep_delay = dep_at - ptd
 
-                    dep_at = dep_at - dep_at.replace(hour=0, minute=0, second=0, microsecond=0)
+                    previous_journey_length = arrival_time - prev_station_dep
+                    time_spent_here = dep_at - arrival_time
                 else:
                     dep_at = datetime.datetime.now() - datetime.datetime.now()
                     dep_delay = dep_at
                     ptd = datetime.datetime.now()
+                    time_spent_here = dep_at
 
                 prev_station_planned_dep = prev_station_ptd - prev_station_ptd.replace(hour=0, minute=0, second=0,
                                                                                microsecond=0)
@@ -100,20 +104,21 @@ class StationBasedForestRegressor:
                 # print("- arrival_time: ", arrival_time)
                 # print("- dep_at: ", dep_at)
                 # print("- dep_delay: ", dep_delay)
-                newRow = [prev_station_planned_dep.total_seconds(), prev_station_delay.total_seconds(), month, day, peak,
-                                                       arrival_time.total_seconds(), ptd.total_seconds(), dep_delay.total_seconds()]
+
+                newRow = [prev_station_delay.total_seconds(), month, day, hour, peak,previous_journey_length.total_seconds(),
+                                                       time_spent_here.total_seconds(), dep_delay.total_seconds()]
                 classification_data.loc[count] = newRow
                 count = count + 1
 
             classification_data.fillna(0)
 
-            X = classification_data.drop(['arrival_time', 'ptd', 'dep_delay'],
+            X = classification_data.drop(['previous_journey_length', 'time_spent_at_station', 'dep_delay'],
                                               axis=1)  # Remove predicting value for X dataframe
             y = classification_data[
-                ['arrival_time', 'ptd', 'dep_delay']].values  # Seperate target predicting values into own dataframe
+                ['previous_journey_length', 'time_spent_at_station', 'dep_delay']].values  # Seperate target predicting values into own dataframe
 
             self.stations[station].fit(X, y)
-            print(" (found ",classification_data.ptd.count()," instances in the data)")
+            print(" (found ",classification_data.month.count()," instances in the data)")
             print("COMPLETE ")
 
         print(" DONE")
@@ -325,17 +330,21 @@ class StationBasedForestRegressor:
         #print("User planned departure at: ", secondsToTime(user_planned_depature_time_s), "(", user_planned_depature_time_s, ") FROM",user_travelling_from)
 
         delay = int(features['delay_mins']) * 60
+        user_left_at = user_planned_depature_time_s + delay
         #print("User delayed by: ", delay)
         #print("Travelling to: ", user_travelling_to)
 
         now = datetime.datetime.now()
         month = now.month
         day = now.weekday()
+        hour = int(user_left_at / 3600)
+        hour = datetime.datetime.strptime(str(hour)+"0000", "%H%M%S")
+        hour = hour.hour
         peak = isPeak(user_planned_depature_time_s)
 
-        ptd = user_planned_depature_time_s
 
-        predicted_arrival_time = None
+        journey_length_since_dep = 0
+        time_spent_at_station = 0
         started = False
         for stop in self.route:
 
@@ -349,19 +358,30 @@ class StationBasedForestRegressor:
 
             # Predict values for stop
             #print("Predicting values for passing through ", stop)
-            predictions = self.stations[stop].predict([[ptd, delay, month, day, peak]])
-            #print("Train left last station at ", secondsToTime(dep_at), " and was delayed by ",secondsToTime(delay))
-            predicted_arrival_time = round(predictions[0][0])
-            ptd = predictions[0][1]
+            predictions = self.stations[stop].predict([[delay, month, day, hour, peak]])
+
+            columns = ["prev_station_delay", "month", "day", "hour", "peak", "previous_journey_length",
+                       "time_spent_at_station",
+                       "dep_delay"]
+
+
+            previous_journey_length = predictions[0][0]
+            time_spent_at_station = predictions[0][1]
             delay = predictions[0][2]
+
+            journey_length_since_dep = journey_length_since_dep + previous_journey_length
+            arrival_time = user_left_at + journey_length_since_dep
+            hour = int(arrival_time / 3600)
             #print("         This train should arrive to ",stop," at ",secondsToTime(predicted_arrival_time), " and will likely be delayed by ", secondsToTime(delay),"\n")
 
             if stop == user_travelling_to:
-                #print("Predicing Final Values at ",stop," as ",secondsToTime(predicted_arrival_time))
-                break
+                #arrival_time = user_left_at + journey_length_since_dep
+                #print("Predicing Final Values at ",stop," as ",secondsToTime(arrival_time))
+                return arrival_time
+            else:
+                journey_length_since_dep + time_spent_at_station
 
-
-        return predicted_arrival_time
+        return None
 
 
 if __name__ == "__main__":
@@ -379,7 +399,7 @@ if __name__ == "__main__":
     # classifier_lg.buildClassifier(None)
     # dump(classifier_lg, 'BIGBOY.joblib')
 
-    sm = load("classifier_sm.joblib")
+    sm = load("no_times_lg.joblib")
     print("Loaded sm")
     md = load("classifier_md.joblib")
     print("Loaded md")
@@ -387,6 +407,8 @@ if __name__ == "__main__":
     print("Loaded lg")
     BIGBOY = load("BIGBOY.joblib")
     print("Loaded BIGBOY")
+    new = load("no_times_lg.joblib")
+    print("Loaded new")
 
     # sm.testClassifier("sm")
     # md.testClassifier("md")
@@ -407,6 +429,8 @@ if __name__ == "__main__":
             lg.classifyInstance({"to":t, "from":f, "planned_dep_time":ptd, "delay_mins":delay})))
         print(secondsToTime(
             BIGBOY.classifyInstance({"to": t, "from": f, "planned_dep_time": ptd, "delay_mins": delay})))
+        print(secondsToTime(
+            new.classifyInstance({"to": t, "from": f, "planned_dep_time": ptd, "delay_mins": delay})))
 
 
 
@@ -417,8 +441,11 @@ if __name__ == "__main__":
     # print("TESTING")
     # test_load.testClassifier("TESTING_BUILT_CLASSIFIER")
 
-    # new_test = StationBasedForestRegressor()
-    # new_test.buildClassifier()
+    # new_test = StationBasedVersion2()
+    # new_test.buildClassifier(10000)
+    # dump(new_test, 'no_times_lg.joblib')
+    #sm.classifyInstance({"to": "LIVST", "from": "NRCH", "planned_dep_time": "0500", "delay_mins": 0})
+    #sm.testClassifier("Testing_new_sm")
     # dump(new_test, 'classifier_updated.joblib')
     # a = load('classifier_updated.joblib')
     # a.testClassifier("NEW")
