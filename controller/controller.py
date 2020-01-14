@@ -270,7 +270,8 @@ class ConversationController():
             prev_context = self.context
 
             # Recieve self.context from NLP : 'chat' , 'booking' , 'delay'
-            self.context = self.nlp.classify_user_sentence(user_query)
+            # self.context = self.nlp.classify_user_sentence(user_query)
+            self.context = self.nlp.determine_context_from_model(user_query)
 
             # Dont allow swap from booking to delay
             if(prev_context == 'booking' and self.context == 'delay'):

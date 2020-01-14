@@ -170,6 +170,7 @@ class ReasoningEngine:
             return random.choice(self.GREETINGS)
 
 
+
     #assign sentence a type (greeting or not)
     def classify_user_sentence(self,sentence):
         sent = nlp(sentence)
@@ -603,3 +604,27 @@ class ReasoningEngine:
         return response
 
 
+    def determine_context_from_model(self, user_query):
+        print("DETERMINING CONTEXT FROM MODEL")
+
+        # Generic words
+        stops = stopwords.words('english')
+        # used to reduce word to its lemma
+        stemmer = SnowballStemmer('english')
+
+        myDict = {'USER_QUERY' : user_query}
+        df = DataFrame(list(myDict.items()),columns = ['USER QUERY','Question'])
+
+        # Clean up data by removing stop words and reduce others to their lemma
+        df['cleaned'] = df['Question'].apply(lambda x: " ".join([stemmer.stem(i) for i in re.sub("[^a-zA-Z]", " ", x).split() if i not in stops]).lower())
+
+        user_query = df.cleaned[0]
+
+        print("CONTEXT CLEANED:", user_query)
+
+
+        # Predict answer from the model
+        response = str(self.kb.context_model.predict([user_query]))
+        # Format string
+        response = response.replace('[', '').replace(']','').replace('\'', '').replace('"','')
+        return response

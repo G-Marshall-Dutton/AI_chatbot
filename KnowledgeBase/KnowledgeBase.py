@@ -86,8 +86,8 @@ class KnowledgeBase():
 
         #self.readCSV()
         self.readTSV()
-        #self.chat_model = self.trainModel()
-        self.trainContextModels()
+        self.chat_model = self.trainModel()
+        self.context_model = self.trainContextModels()
 
 
 
@@ -165,7 +165,7 @@ class KnowledgeBase():
 
             # ---
 
-            print('BUILDING MODEL...')
+            print('BUILDING CHAT MODEL...')
 
             # Read all data into pandas DataFrame
             data1 = pd.read_csv('qna_chitchat_witty.tsv', sep='\t')
@@ -208,7 +208,7 @@ class KnowledgeBase():
 
 
             model = pipeline.fit(X_train, y_train)
-            print('MODEL BUILT.')
+            print('CHAT MODEL BUILT.')
             print('TESTING ACCURACY...')
             accuracy = model.score(X_test, y_test)       
             print('ACCURACY:', accuracy)
@@ -229,20 +229,35 @@ class KnowledgeBase():
 
             # ---
 
-            print('BUILDING MODEL...')
+            print('BUILDING CONTEXT MODEL...')
             data = pd.read_csv('contextExamples.csv')
+            print(data)
+            input("Press enter...")
+
+            for i in range(9):
+                duplicate_data = pd.read_csv('contextExamples.csv')
+                data = pd.concat([data, duplicate_data])
+
+            # with open('reduced_chat_examples.csv', 'w') as f:
+            #     writer = csv.writer(f)
+            #     for row in self.chatKnowledge.items():
+            #         writer.writerow(row)
 
             # Read all data into pandas DataFrame
-            data1 = pd.read_csv('context_chitchat_witty.csv')
+            # data1 = pd.read_csv('context_chitchat_witty.csv')
+            data1 = pd.read_csv('reduced_chat_examples.csv')
+            print(data1)
+            input("Press enter...")
 
 
-            # Read additional data into pandas DataFrame
-            data2 = pd.read_csv('context_QA.csv')
-
+            # # Read additional data into pandas DataFrame
+            # data2 = pd.read_csv('context_QA.csv')
+            # print(data2)
+            # input("Press enter...")
 
             # Combine datasets
             data = pd.concat([data, data1])
-            data = pd.concat([data, data2])
+            # data = pd.concat([data, data2])
 
             # Generic words
             stops = stopwords.words('english')
@@ -270,13 +285,13 @@ class KnowledgeBase():
             #                     ('clf', LinearSVC(C=1.5, penalty='l2', max_iter=7000, dual=False))])
 
             pipeline = Pipeline([('vect', TfidfVectorizer(ngram_range=(1, 4), stop_words="english", sublinear_tf=True, analyzer = 'char')), 
-                                ('chi',  SelectKBest(chi2, k='all')),
+                                ('chi',  SelectKBest(chi2, k=800)),
                                 ('clf', LinearSVC(C=1.5, penalty='l2', max_iter=7000, dual=False))])
 
 
 
             model = pipeline.fit(X_train, y_train)
-            print('MODEL BUILT.')
+            print('CONTEXT MODEL BUILT.')
             print('TESTING ACCURACY...')
             accuracy = model.score(X_test, y_test)       
             print('ACCURACY:', accuracy)
