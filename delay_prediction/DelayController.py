@@ -6,8 +6,7 @@ class DelayController:
 
     def __init__(self):
         # Initialise best classifier
-        #self.classifier = load('classifier.joblib')
-        print("Hiya")
+        self.classifier = load('/Users/georgemarshall-dutton/AI_chat_bot/delay_prediction/classifier.joblib')
 
     def get_delay(self, user_information):
         delay = self.classifier.classifyInstance(user_information)
