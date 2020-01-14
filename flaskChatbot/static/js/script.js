@@ -76,11 +76,85 @@ activateVoice = () => {
                 lastMessage.after(
                     "<div class='response message-left '>  <p class='bg-primary'> "+data.answer+" </p>  </div>"
                 );
+            
 
                 updateScroll();
 
             }
+            // -------
+            else if(data.status == "ticketInfo"){
+                // Write PaPa message bubble
+                lastMessage.after(
+                    "<div class='response message-right '>  <p class='bg-success'> "+data.question+" </p>  </div>"
+                );
 
+                lastMessage = $(".response:last-of-type")
+
+                 // Display scraped ticket info as a ticket
+                 lastMessage.after(
+                    `<div class='ticket'> 
+                        <div class='textArea'>
+
+                            <div class='headings'>
+                                <p> Class </p>
+                                <p> Ticket type </p>
+                                <p> Adult </p>
+                                <p> Child </p>
+                            </div>
+                            <div class='info'>
+                                <p> STD </p>
+                                <p class="sml-text">`+ data.answer.ticketType + `</p>
+                                <p> `+ data.answer.numberOfTickets +` </p>
+                                <p> 0 </p>
+                            </div>
+
+                            <div class='headings'>
+                            </div>
+                            <div class='info'>
+                            </div>
+
+                            <div class='headings'>
+                                <p> From </p>
+                                <p> Leaving at </p>
+                                <p> Route name </p>
+                            </div>
+                            <div class='info'>
+                                <p>`+ data.answer.fromStation +`</p>
+                                <p>`+ data.answer.departureTime +`</p>
+                                <p class="sml-text"> `+ data.answer.fareRouteName +` </p>
+                            </div>
+
+                            <div class='headings'>
+                                <p> To </p>
+                                <p> Arriving at </p>
+                                <p> Price </p>
+                            </div>
+                            <div class='info'>
+                                <p>`+ data.answer.toStation +`</p>
+                                <p>`+ data.answer.arrivalTime +`</p>
+                                <p> `+ data.answer.price +` </p>
+                            </div>
+                        </div> 
+                    </div>`
+           
+                );
+
+                var ticket =  $(".ticket")
+                ticket.after(
+                    `
+                    <div class='button-row'>
+                        <a href = '`+ data.answer.pageUrl + `' class = 'btn bg-warning' target='blank'> Book Now </a>
+                    </div>
+                    <div class="response"></div>
+                    `
+                )
+
+                updateScroll();
+                
+            }
+
+
+            // -------
         }   
     })
 }

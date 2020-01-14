@@ -79,11 +79,16 @@ def chat():
         print("HEARD:", userInput)
         response = controller.respond(userInput)
         string_response = isinstance(response, str )
-        # Save response as MP3
-        tts = gTTS(text=response, lang='en')
-        tts.save("response.mp3")
 
-        response = make_response(jsonify({"answer": response, "question": userInput, "status" : "voiceChat"}), 200)
+        # Deal with normal string response from AI
+        if string_response:
+            # Save response as MP3
+            tts = gTTS(text=response, lang='en')
+            tts.save("response.mp3")
+            response = make_response(jsonify({"answer": response, "question": userInput, "status" : "voiceChat"}), 200)
+        # Deal with dict response from AI
+        else:
+            response = make_response(jsonify({"answer": response, "question": userInput, "status" : "ticketInfo"}), 200)
 
         # Play audio if voice active
         if(controller.voiceActive and string_response):
