@@ -165,9 +165,9 @@ class ConversationController():
             self.awaiting_delay_confirmation = False
 
             # Convert 'London' into station code (London is edge case, dont need to do this for other stations)
-            if(self.delay_state['from'] == 'London'):
+            if(self.delay_state['from'] == 'London' or self.delay_state['from'] == 'london' ):
                 self.delay_state['from'] = 'LIVST'
-            elif(self.delay_state['to'] == 'London'):
+            elif(self.delay_state['to'] == 'London' or self.delay_state['to'] == 'london'):
                 self.delay_state['to'] = 'LIVST'
 
 
