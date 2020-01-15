@@ -231,7 +231,6 @@ class ReasoningEngine:
 
     # return true if user replies with affirmation, else false
     def affirmation(self, sentence):
-
         result = False
         
         sent = nlp(sentence)
@@ -264,7 +263,6 @@ class ReasoningEngine:
 
     # return true if user replies with affirmation, else false
     def refutation(self, sentence):
-
         result = False
         
         sent = nlp(sentence)

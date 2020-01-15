@@ -67,12 +67,12 @@ def chat():
     # Active voice responses
     if(userInput == 'VOICE-ACTIVE'):
         controller.voiceActive = True
-        return True
+        return 'True'
 
     # Active voice responses
     if(userInput == 'VOICE-UNACTIVE'):
         controller.voiceActive = False
-        return True
+        return 'True'
 
     if(userInput == 'VOICE'):
         userInput = voice_listener.listen()

@@ -161,7 +161,7 @@ activateVoice = () => {
 
 
 sendMessage = () => {
-
+    console.log("SENDING MESSAGE__")
     // Get last message sent
     var lastMessage = $(".response:last-of-type")
 
